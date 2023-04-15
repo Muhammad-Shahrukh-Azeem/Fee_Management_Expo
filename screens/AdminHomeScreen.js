@@ -1,10 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
 
 const AdminHomeScreen = () => {
+  const navigation = useNavigation();
+
   const handleAddCourse = () => {
-    // Add your logic to handle Add Course button press
-    console.log('Add Course button pressed');
+    navigation.navigate('AddCourse');
   };
 
   const handleEditFee = () => {

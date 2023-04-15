@@ -11,25 +11,29 @@ const AdminLoginScreen = () => {
     const [password, setPassword] = useState('');
 
     const navigation = useNavigation();
-    const handleAdminLogin = () => {
 
+    const handleAdminLogin = () => {
         signInWithEmailAndPassword(auth, email, password)
             .then(async (userCredentials) => {
                 const user = userCredentials.user;
 
-                // get the user's role from the 'userRoles' collection in Firestore
+                // Get the user's role from the 'userRoles' collection in Firestore
                 const docRef = doc(db, 'userRoles', user.uid);
 
                 const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const userRole = docSnap.data().Role;
+                    console.log("Fetched userRole: ", userRole); // Debug statement
 
-
-                const userRole = docSnap.data().Role;
-
-                // check if user is admin
-                if (userRole === 'Admin') {
-                    navigation.navigate('AdminHome');
+                    // Check if user is admin
+                    if (userRole === 'Admin') {
+                        navigation.navigate('AdminHome');
+                    } else {
+                        Alert.alert('Error', 'This user is not an admin.');
+                    }
                 } else {
-                    Alert.alert('Error', 'This user is not an admin.');
+                    console.log("userRoles doc not found for user: ", user); // Debug statement
+                    Alert.alert('Error', 'No user role found.');
                 }
             })
             .catch((error) => Alert.alert('Error', error.message));
@@ -101,3 +105,4 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
+

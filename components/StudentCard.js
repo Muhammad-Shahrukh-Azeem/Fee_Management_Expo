@@ -1,13 +1,30 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import RadioButton from 'react-native-paper/lib/module/components/RadioButton';
-import { LinearGradient } from 'react-native-linear-gradient';
+import { db } from '../firebase'; // Import db from your firebase config file
+import { updateDoc, doc } from 'firebase/firestore'; // Import updateDoc and doc
 
 
 const StudentCard = ({ item }) => {
     const [paymentOption, setPaymentOption] = useState('null');
     const [customPayment, setCustomPayment] = useState('');
-    
+
+
+    const updatePayment = async () => {
+        const studentRef = doc(db, 'studentData', item.id);
+
+        if (paymentOption === 'full') {
+            await updateDoc(studentRef, { status: 'Paid' });
+        } else if (paymentOption === 'custom' && customPayment) {
+            const newAmount = item.amount - parseInt(customPayment);
+            await updateDoc(studentRef, { amount: newAmount });
+
+            if (newAmount <= 0) {
+                await updateDoc(studentRef, { status: 'Paid' });
+            }
+        }
+    };
+
 
     return (
         <View style={[styles.studentCard, item.status === 'Paid' ? styles.paidCard : styles.unpaidCard]}>
@@ -49,7 +66,7 @@ const StudentCard = ({ item }) => {
                     placeholder="Enter amount"
                 />
             )}
-            <TouchableOpacity style={styles.paymentUpdateButton} onPress={() => { }}>
+            <TouchableOpacity style={styles.paymentUpdateButton} onPress={updatePayment}>
                 <Text style={styles.paymentUpdateText}>Update Payment</Text>
             </TouchableOpacity>
         </View>

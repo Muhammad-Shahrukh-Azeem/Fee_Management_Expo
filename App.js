@@ -8,6 +8,7 @@ import AdminLoginScreen from './screens/AdminLoginScreen';
 import AdminHomeScreen from './screens/AdminHomeScreen';
 import AddStudentScreen from './screens/AddStudentScreen';
 import { AuthProvider } from './contexts/AuthContext';
+import AddCourseScreen from './screens/AddCourseScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,8 @@ export default function App() {
           <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
           <Stack.Screen name="AdminHome" component={AdminHomeScreen} />
           <Stack.Screen name="AddStudent" component={AddStudentScreen} />
+          <Stack.Screen name="AddCourse" component={AddCourseScreen} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
