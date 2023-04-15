@@ -5,14 +5,13 @@ import {
   TouchableOpacity,
   View,
   FlatList,
-  ScrollView,
   SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth, db } from '../firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { useIsFocused } from '@react-navigation/native';
-
+import { useAuth } from '../contexts/AuthContext';
+import StudentCard from '../components/StudentCard'; // Import StudentCard
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -57,13 +56,7 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }) => {
-    return (
-      <View style={[styles.studentCard, item.status === 'Paid' ? styles.paidCard : styles.unpaidCard]}>
-        <Text>Name: {item.name}</Text>
-        <Text>Subject/Package: {item.subject}</Text>
-        <Text>Amount: {item.amount}</Text>
-      </View>
-    );
+    return <StudentCard item={item} />; // Use StudentCard component
   };
 
   return (
@@ -73,6 +66,7 @@ const HomeScreen = () => {
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
       </View>
+
       <View style={styles.filterContainer}>
         <TouchableOpacity onPress={() => setFilter('All')} style={styles.filterButton}>
           <Text style={styles.filterText}>All</Text>
@@ -83,22 +77,21 @@ const HomeScreen = () => {
         <TouchableOpacity onPress={() => setFilter('Unpaid')} style={styles.filterButton}>
           <Text style={styles.filterText}>Unpaid</Text>
         </TouchableOpacity>
-        
       </View>
-      <ScrollView>
-        <FlatList
-          data={filteredStudents}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.studentList}
-        />
-      </ScrollView>
+      <FlatList
+        data={filteredStudents}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.studentList}
+      />
       <TouchableOpacity onPress={handleAddStudent} style={styles.addButton}>
-        <Text style={styles.addButtonText}>Add Student</Text>
+        <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
+
     </SafeAreaView>
   );
 };
+
 
 export default HomeScreen;
 
@@ -159,17 +152,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffd1d1',
   },
   addButton: {
-    backgroundColor: '#0782F9',
-    width: '60%',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: 'center',
+  },
+  paymentUpdateText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  addButton: {
     alignItems: 'center',
-    alignSelf: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#0782F9',
   },
   addButtonText: {
     color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+    fontSize: 32,
+    fontWeight: 'bold',
   },
+
 });

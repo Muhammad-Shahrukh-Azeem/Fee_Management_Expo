@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
 import { db } from '../firebase';
@@ -61,8 +61,19 @@ const AddStudentScreen = () => {
         }
     };
 
+    const renderSubject = ({ item: subject }) => (
+        <View style={styles.subjectCheckboxContainer} key={subject}>
+            <RadioButton
+                value={selectedSubjects[subject]}
+                status={selectedSubjects[subject] ? 'checked' : 'unchecked'}
+                onPress={() => handleSubjectSelection(subject, !selectedSubjects[subject])}
+            />
+            <Text style={styles.subjectLabel}>{subject.charAt(0).toUpperCase() + subject.slice(1)}</Text>
+        </View>
+    );
+
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.heading}>Add Student</Text>
             <TextInput
                 placeholder="Student Name"
@@ -71,23 +82,18 @@ const AddStudentScreen = () => {
                 style={styles.input}
             />
             <Text style={styles.subjectsHeading}>Subjects</Text>
-            <View style={styles.subjectsContainer}>
-                {Object.keys(subjectFees).map((subject) => (
-                    <View style={styles.subjectCheckboxContainer} key={subject}>
-                        <RadioButton
-                            value={selectedSubjects[subject]}
-                            status={selectedSubjects[subject] ? 'checked' : 'unchecked'}
-                            onPress={() => handleSubjectSelection(subject, !selectedSubjects[subject])}
-                        />
-                        <Text style={styles.subjectLabel}>{subject.charAt(0).toUpperCase() + subject.slice(1)}</Text>
-                    </View>
-                ))}
-            </View>
+            <FlatList
+                data={Object.keys(subjectFees)}
+                renderItem={renderSubject}
+                keyExtractor={(item) => item}
+                numColumns={2}
+                contentContainerStyle={styles.subjectsContainer}
+            />
             <Text style={styles.totalFee}>Total Fee: {totalFee}</Text>
             <TouchableOpacity onPress={handleSubmit} style={styles.button}>
                 <Text style={styles.buttonText}>Add Student</Text>
             </TouchableOpacity>
-        </ScrollView>
+        </View>
     );
 };
 
@@ -118,8 +124,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     subjectsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
         marginBottom: 20,
     },
     subjectCheckboxContainer: {
@@ -127,6 +131,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 15,
         marginBottom: 15,
+        flexBasis: '48%',
     },
     subjectLabel: {
         marginLeft: 8,
