@@ -10,9 +10,13 @@ const AdminHomeScreen = () => {
     navigation.navigate('AddCourse');
   };
 
+  const handleEditStudent = () => {
+    navigation.navigate('EditStudent');
+  };
+
   const handleEditFee = () => {
-    // Add your logic to handle Edit Fee button press
-    console.log('Edit Fee button pressed');
+    navigation.navigate('EditCourse');
+
   };
 
   return (
@@ -21,7 +25,10 @@ const AdminHomeScreen = () => {
         <Text style={styles.buttonText}>Add Course</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={handleEditFee}>
-        <Text style={styles.buttonText}>Edit Fee</Text>
+        <Text style={styles.buttonText}>Edit Course</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleEditStudent}>
+        <Text style={styles.buttonText}>Edit Student</Text>
       </TouchableOpacity>
     </View>
   );

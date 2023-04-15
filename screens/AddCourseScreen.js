@@ -14,24 +14,26 @@ const AddCourseScreen = () => {
     const navigation = useNavigation();
 
     const handleSubmit = async () => {
-        if (subjectName.trim() === '' || subjectFee.trim() === '' || teacherName.trim() === '') {
+        if (subjectName.trim() === '' || subjectFee.trim() === '' || teacherName.trim() === '' || branchName.trim() === '') {
             alert('Please fill in all the fields.');
             return;
         }
-
+    
         try {
             await addDoc(collection(db, 'courses'), {
                 subjectName,
                 subjectFee: parseFloat(subjectFee),
                 teacherName,
+                branchName,
             });
-
+    
             alert('Course added successfully.');
             navigation.goBack();
         } catch (error) {
             alert('Error adding course: ' + error.message);
         }
     };
+    
 
     return (
         <View style={styles.container}>
