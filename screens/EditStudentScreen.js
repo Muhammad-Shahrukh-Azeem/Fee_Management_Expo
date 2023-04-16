@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { db } from '../firebase'; // Import db from your firebase config file
-import { updateDoc, doc, getDocs, collection } from 'firebase/firestore'; // Import updateDoc, doc, getDocs, and collection
+import { updateDoc, deleteDoc, doc, getDocs, collection } from 'firebase/firestore';
 import EditStudentCard from '../components/EditStudentCard';
 
 const EditStudentScreen = () => {
@@ -22,6 +22,17 @@ const EditStudentScreen = () => {
       console.error('Error fetching student data: ', error);
     } finally {
       setLoading(false);
+    }
+  };
+  const handleDeleteStudent = async (id) => {
+    try {
+      const studentRef = doc(db, 'studentData', id);
+      await deleteDoc(studentRef);
+
+      alert('Student deleted successfully.');
+      fetchStudentData();
+    } catch (error) {
+      alert('Error deleting student: ' + error.message);
     }
   };
 
@@ -75,6 +86,7 @@ const EditStudentScreen = () => {
           key={item.id}
           item={item}
           handleUpdateStudent={handleUpdateStudent}
+          handleDeleteStudent={handleDeleteStudent} // Add this line
           totalAmount={item.totalFee}
           subject={item.subjects ? item.subjects.join(', ') : ''}
           package={item.packages ? item.packages.map(pkg => pkg.packageName).join(', ') : ''}
@@ -82,7 +94,7 @@ const EditStudentScreen = () => {
       ))}
     </ScrollView>
   );
-  
+
 };
 
 const styles = StyleSheet.create({

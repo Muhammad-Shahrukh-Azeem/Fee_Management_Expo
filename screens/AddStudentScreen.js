@@ -66,7 +66,7 @@ const AddStudentScreen = () => {
     };
     
     const handleSubmit = async () => {
-        if (!name || selectedPackages.length === 0 || Object.keys(selectedSubjects).length === 0) {
+        if (!name) {
           alert('Please fill in all fields');
           return;
         }
@@ -76,15 +76,14 @@ const AddStudentScreen = () => {
           const studentData = {
             name,
             packages: selectedPackages.map(pkgId => ({
-                packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
+              packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
             })),
-            status: 'Unpaid',
-
             subjects: Object.keys(selectedSubjects).filter(
               subject => selectedSubjects[subject],
             ),
             totalFee: totalAmount,
           };
+          
       
           await addDoc(collection(db, 'studentData'), studentData);
           alert('Student added successfully');

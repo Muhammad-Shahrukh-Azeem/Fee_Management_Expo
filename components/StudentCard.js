@@ -1,126 +1,219 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import RadioButton from 'react-native-paper/lib/module/components/RadioButton';
-import { db } from '../firebase'; // Import db from your firebase config file
-import { updateDoc, doc } from 'firebase/firestore'; // Import updateDoc and doc
+import React, { useState, useEffect } from 'react';
+import {
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
+const StudentCard = ({ student, feeRecord }) => {
+    if (!feeRecord) {
+        return (
+            <View style={styles.studentCard}>
+                <Text>No fee record found for this month.</Text>
+            </View>
+        );
+    }
+    const [paymentStatus, setPaymentStatus] = useState('Null');
+    const [customAmount, setCustomAmount] = useState('');
+    const [displayedTotalFee, setDisplayedTotalFee] = useState(student.totalFee);
 
-const StudentCard = ({ item }) => {
-    const [paymentOption, setPaymentOption] = useState('null');
-    const [customPayment, setCustomPayment] = useState('');
+    useEffect(() => {
+        setDisplayedTotalFee(student.totalFee - (feeRecord.customAmount || 0));
+    }, [student.totalFee, feeRecord.customAmount]);
 
-    const updatePayment = async () => {
-        const studentRef = doc(db, 'studentData', item.id);
+    const updateFeeRecord = async (status, amount) => {
+        const feeRecordRef = doc(db, 'feeRecords', feeRecord.id);
 
-        if (paymentOption === 'full') {
-            await updateDoc(studentRef, { status: 'Paid' });
-        } else if (paymentOption === 'custom' && customPayment) {
-            const newAmount = item.amount - parseInt(customPayment);
-            await updateDoc(studentRef, { amount: newAmount });
+        let updates = { status: status };
 
-            if (newAmount <= 0) {
-                await updateDoc(studentRef, { status: 'Paid' });
-            }
+        if (amount) {
+            updates['customAmount'] = (feeRecord.customAmount || 0) + amount;
+            updates['totalFee'] = student.totalFee - updates['customAmount'];
+        }
+
+        await updateDoc(feeRecordRef, updates);
+    };
+
+    const handleCustomPayment = () => {
+        updateFeeRecord('Unpaid', parseInt(customAmount));
+    };
+
+    const handleUpdatePayment = () => {
+        if (paymentStatus === 'Custom Payment') {
+            handleCustomPayment();
+        } else {
+            updateFeeRecord(paymentStatus === 'Full Payment' ? 'Paid' : paymentStatus);
         }
     };
 
     return (
-        <View style={[styles.studentCard, item.status === 'Paid' ? styles.paidCard : styles.unpaidCard]}>
-            <Text>Name: {item.name}</Text>
-            <Text>Courses: {item.subjects && item.subjects.join(', ')}</Text>
-            <Text>Packages: {item.packages && item.packages.map(pkg => pkg.packageName).join(', ')}</Text>
-            <Text>Amount: {item.totalFee}</Text>
-            <View style={styles.paymentOptionsContainer}>
-                <View style={styles.radioButtonContainer}>
-                    <RadioButton
-                        value="null"
-                        status={paymentOption === 'null' ? 'checked' : 'unchecked'}
-                        onPress={() => setPaymentOption('null')}
-                    />
-                    <Text style={styles.radioButtonLabel}>Null</Text>
+        <View style={styles.studentCard}>
+            <View style={styles.studentInfo}>
+                <View style={styles.studentInfoRow}>
+                    <Text style={styles.studentInfoTextBold}>Name:</Text>
+                    <Text style={styles.studentInfoText}>{student.name}</Text>
                 </View>
-                <View style={styles.radioButtonContainer}>
-                    <RadioButton
-                        value="full"
-                        status={paymentOption === 'full' ? 'checked' : 'unchecked'}
-                        onPress={() => setPaymentOption('full')}
-                    />
-                    <Text style={styles.radioButtonLabel}>Full Payment</Text>
+                <View style={styles.studentInfoRow}>
+                    <Text style={styles.studentInfoTextBold}>Courses:</Text>
+                    <Text style={styles.studentInfoText}>
+                        {student.subjects && student.subjects.join(', ')}
+                    </Text>
                 </View>
-                <View style={styles.radioButtonContainer}>
-                    <RadioButton
-                        value="custom"
-                        status={paymentOption === 'custom' ? 'checked' : 'unchecked'}
-                        onPress={() => setPaymentOption('custom')}
-                    />
-                    <Text style={styles.radioButtonLabel}>Custom Payment</Text>
+                <View style={styles.studentInfoRow}>
+                    <Text style={styles.studentInfoTextBold}>Packages:</Text>
+                    <Text style={styles.studentInfoText}>
+                        {student.packages && student.packages.map(pkg => pkg.packageName).join(', ')}
+                    </Text>
+                </View>
+                <View style={styles.studentInfoRow}>
+                    <Text style={styles.studentInfoTextBold}>Amount:</Text>
+                    <Text style={styles.studentInfoText}>{displayedTotalFee}</Text>
+                </View>
+                <View style={styles.studentInfoRow}>
+                    <Text style={styles.studentInfoTextBold}>Status:</Text>
+                    <Text style={feeRecord.status === 'Paid' ? styles.paidStatus : styles.unpaidStatus}>
+                        {feeRecord.status}
+                    </Text>
                 </View>
             </View>
-            {paymentOption === 'custom' && (
-                <TextInput
-                    style={styles.customPaymentInput}
-                    keyboardType="number-pad"
-                    value={customPayment}
-                    onChangeText={setCustomPayment}
-                    placeholder="Enter amount"
-                />
-            )}
-            <TouchableOpacity style={styles.paymentUpdateButton} onPress={updatePayment}>
-                <Text style={styles.paymentUpdateText}>Update Payment</Text>
-            </TouchableOpacity>
+            <View style={styles.paymentSection}>
+                <View style={styles.radioContainer}>
+                    <TouchableOpacity
+                        style={[
+                            styles.radio,
+                            paymentStatus === 'Null' ? styles.radioSelected : null,
+                        ]}
+                        onPress={() => setPaymentStatus('Null')}
+                    >
+                        <Text style={styles.radioText}>Null</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            styles.radio,
+                            paymentStatus === 'Full Payment' ? styles.radioSelected : null,
+                        ]}
+                        onPress={() => setPaymentStatus('Full Payment')}
+                    >
+                        <Text style={styles.radioText}>Full Payment</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            styles.radio,
+                            paymentStatus === 'Custom Payment' ? styles.radioSelected : null,
+                        ]}
+                        onPress={() => setPaymentStatus('Custom Payment')}
+                    >
+                        <Text style={styles.radioText}>Custom Payment</Text>
+                    </TouchableOpacity>
+                </View>
+                {paymentStatus === 'Custom Payment' && (
+                    <TextInput
+                        style={styles.customAmountInput}
+                        placeholder="Enter custom amount"
+                        value={customAmount}
+                        onChangeText={setCustomAmount}
+                        keyboardType="numeric"
+                    />
+                )}
+                <TouchableOpacity
+                    style={styles.updatePaymentButton}
+                    onPress={handleUpdatePayment}
+                >
+                    <Text style={styles.updatePaymentText}>Update Payment</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
 
 
-
 const styles = StyleSheet.create({
     studentCard: {
-        backgroundColor: 'white',
+        backgroundColor: '#F5F5F5',
         borderRadius: 8,
-        padding: 16,
-        marginBottom: 12,
+        padding: 12,
+        marginBottom: 8,
         borderWidth: 1,
-    },
-    paidCard: {
-        borderColor: 'green',
-    },
-    unpaidCard: {
-        borderColor: 'red',
-    },
-    paymentOptionsContainer: {
+        borderColor: '#ccc',
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        marginTop: 10,
+        justifyContent: 'space-between',
     },
-    radioButtonContainer: {
+    studentInfo: {
+        flex: 1,
+        marginRight: 20,
+    },
+    studentInfoRow: {
         flexDirection: 'row',
-        alignItems: 'center',
+        marginBottom: 4,
     },
-    radioButtonLabel: {
-        marginLeft: 8,
-    },
-    customPaymentInput: {
-        marginTop: 10,
-        borderWidth: 1,
-        borderColor: 'grey',
-        borderRadius: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-    },
-    paymentUpdateButton: {
-        marginTop: 10,
-        backgroundColor: 'blue',
-        borderRadius: 4,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    paymentUpdateText: {
-        color: 'white',
+    studentInfoTextBold: {
+        fontSize: 14,
         fontWeight: 'bold',
+        marginRight: 5,
+    },
+    studentInfoText: {
+        fontSize: 14,
+    },
+    paidStatus: {
+        color: 'green',
+    },
+    unpaidStatus: {
+        color: 'red',
+    },
+    paymentSection: {
+        flex: 1,
+        alignItems: 'flex-end',
+    },
+    radioContainer: {
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    radio: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        padding: 5,
+    },
+    radioSelected: {
+        borderColor: '#0782F9',
+        backgroundColor: '#E6F1FF', // Add this line
+    },
+    
+    radioText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginLeft: 5,
+    },
+    customAmountInput: {
+        marginTop: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        padding: 10,
+        width: '100%',
+    },
+    updatePaymentButton: {
+        backgroundColor: '#0782F9',
+        paddingVertical: 6,
+        paddingHorizontal: 8,
+        borderRadius: 5,
+        alignSelf: 'flex-end',
+        marginTop: 10,
+    },
+    updatePaymentText: {
+        color: 'white',
+        fontWeight: '700',
+        fontSize: 14,
     },
 });
-
 
 export default StudentCard;

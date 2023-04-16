@@ -6,7 +6,7 @@ const EditStudentCard = ({ item = {}, handleUpdateStudent }) => {
   const [updatedSubject, setUpdatedSubject] = useState((item.subjects || []).join(', '));
   const [updatedPackages, setupdatedPackages] = useState((item.packages || []).map(pkg => pkg.packageName).join(', '));
   const [updatedAmount, setUpdatedAmount] = useState(item.totalFee ? item.totalFee.toString() : '');
-  
+
 
   const handleSubmit = () => {
     handleUpdateStudent(item.id, updatedName, updatedSubject.split(',').map(s => s.trim()), updatedPackages.split(',').map(p => ({ packageName: p.trim() })), updatedAmount);
@@ -39,9 +39,14 @@ const EditStudentCard = ({ item = {}, handleUpdateStudent }) => {
         onChangeText={setUpdatedAmount}
         placeholder="Amount"
       />
-      <TouchableOpacity style={styles.updateButton} onPress={handleSubmit}>
-        <Text style={styles.updateText}>Update Student</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.updateButton} onPress={handleSubmit}>
+          <Text style={styles.updateText}>Update Student</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteStudent(item.id)}>
+          <Text style={styles.deleteText}>Delete Student</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -63,17 +68,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  updateButton: {
-    marginTop: 10,
-    backgroundColor: 'blue',
-    borderRadius: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
+
   updateText: {
     color: 'white',
     fontWeight: 'bold',
   },
+
+  deleteText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  updateButton: {
+    flex: 1,
+    backgroundColor: 'blue',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 4, // Add this line to separate the buttons
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: 'red',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginLeft: 4, // Add this line to separate the buttons
+  },
+  buttonContainer: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
 });
 
 export default EditStudentCard;

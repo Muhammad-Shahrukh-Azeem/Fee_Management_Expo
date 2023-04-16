@@ -9,17 +9,22 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth, db } from '../firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import StudentCard from '../components/StudentCard'; // Import StudentCard
+import { collection, onSnapshot, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
+import StudentCard from '../components/StudentCard';
+import { Picker } from '@react-native-picker/picker';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [filter, setFilter] = useState('All');
-  const [packages, setPackages] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [feeRecords, setFeeRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const years = Array.from({ length: 11 }, (_, i) => 2023 + i);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'studentData'), (snapshot) => {
@@ -28,7 +33,6 @@ const HomeScreen = () => {
         ...doc.data(),
       }));
       setStudents(fetchedStudents);
-      setFilteredStudents(fetchedStudents);
     });
 
     return () => {
@@ -36,15 +40,74 @@ const HomeScreen = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (filter === 'All') {
-      setFilteredStudents(students);
-    } else {
-      setFilteredStudents(students.filter((student) => student.status === filter));
-    }
-  }, [filter, students]);
 
-  
+  useEffect(() => {
+    if (students.length === 0 || feeRecords.length === 0) {
+      setFilteredStudents([]);
+      return;
+    }
+
+    const filterStudents = () => {
+      return students.filter((student) => {
+        const studentFeeRecord = feeRecords.find((record) => record.studentId === student.id);
+
+        if (!studentFeeRecord) {
+          return false;
+        }
+
+        if (filter === 'All') {
+          return true;
+        } else {
+          return studentFeeRecord.status === filter;
+        }
+      });
+    };
+
+    setFilteredStudents(filterStudents());
+  }, [filter, students, feeRecords]);
+
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, 'feeRecords'),
+        where('month', '==', selectedMonth),
+        where('year', '==', selectedYear)
+      ),
+      (snapshot) => {
+        const fetchedFeeRecords = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setFeeRecords(fetchedFeeRecords);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    const checkAndInitializeFeeRecords = async () => {
+      const feeRecordSnapshot = await getDocs(
+        query(
+          collection(db, 'feeRecords'),
+          where('month', '==', selectedMonth),
+          where('year', '==', selectedYear)
+        )
+      );
+
+      if (feeRecordSnapshot.empty) {
+        await initializeFeeRecordsForMonth(selectedMonth, selectedYear);
+      }
+    };
+
+    if (students.length > 0) {
+      checkAndInitializeFeeRecords();
+    }
+  }, [selectedMonth, selectedYear, students]);
 
   const handleSignOut = () => {
     auth
@@ -53,31 +116,90 @@ const HomeScreen = () => {
         navigation.replace('Login');
       })
       .catch((error) => alert(error.message));
+
   };
+
+  const initializeFeeRecordsForMonth = async (month, year) => {
+    const studentDocs = await getDocs(collection(db, 'studentData'));
+
+    const batch = writeBatch(db);
+
+    studentDocs.forEach((studentDoc) => {
+      const studentData = studentDoc.data();
+      const monthName = new Date(2000, month - 1).toLocaleString('default', { month: 'long' });
+
+      const feeRecordRef = doc(db, 'feeRecords', `${studentDoc.id}_${month}_${year}`);
+      batch.set(feeRecordRef, {
+        studentId: studentDoc.id,
+        studentName: studentData.name,
+        month: month,
+        monthName: monthName,
+        year: year,
+        status: 'Unpaid',
+      });
+    });
+
+    await batch.commit();
+  };
+
+  const MonthPicker = () => (
+    <View style={styles.pickerContainer}>
+      <Picker
+        selectedValue={selectedMonth}
+        style={styles.picker}
+        onValueChange={(itemValue) => setSelectedMonth(itemValue)}>
+        {months.map((month) => {
+          const monthName = new Date(2000, month - 1).toLocaleString('default', { month: 'long' });
+          return <Picker.Item key={month} label={monthName} value={month} />;
+        })}
+      </Picker>
+    </View>
+  );
+
+  const YearPicker = () => (
+    <View style={styles.pickerContainer}>
+      <Picker
+        selectedValue={selectedYear}
+        style={styles.picker}
+        onValueChange={(itemValue) => setSelectedYear(itemValue)}
+      >
+        {years.map((year) => (
+          <Picker.Item key={year} label={year.toString()} value={year} />
+        ))}
+      </Picker>
+    </View>
+  );
 
   const handleAddStudent = () => {
     navigation.navigate('AddStudent');
   };
 
   const renderItem = ({ item }) => {
-    const selectedPackage = packages.find(pkg => pkg.id === item.packageId);
-  
-    return (
-      <StudentCard
-        item={item}
-        subjects={item.subjects}
-        totalCost={item.totalCost}
-        packageName={selectedPackage?.packageName}
-        packageAmount={selectedPackage?.amount}
-      />
-    );
+    const feeRecord = feeRecords.find((record) => record.studentId === item.id);
+    return <StudentCard student={item} feeRecord={feeRecord} />;
   };
   
-  
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <View style={styles.filterContainer}>
+          <MonthPicker />
+          <YearPicker />
+        </View>
+        <Text style={styles.selectedDate}>
+          {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
+            month: 'long',
+          })}{' '}
+          {selectedYear}
+        </Text>
         <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
@@ -103,13 +225,12 @@ const HomeScreen = () => {
       <TouchableOpacity onPress={handleAddStudent} style={styles.addButton}>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
-
     </SafeAreaView>
   );
 };
 
-
 export default HomeScreen;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -119,10 +240,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-around',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  selectedDate: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   signOutButton: {
     backgroundColor: '#0782F9',
@@ -156,25 +281,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingBottom: 20,
   },
-  studentCard: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  paidCard: {
-    backgroundColor: '#d1ebff',
-  },
-  unpaidCard: {
-    backgroundColor: '#ffd1d1',
-  },
-  addButton: {
-    backgroundColor: 'center',
-  },
-  paymentUpdateText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 14,
-  },
   addButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -191,5 +297,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
   },
-
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#0782F9',
+    borderRadius: 5,
+  },
+  picker: {
+    height: 40,
+    width: 100,
+  },
 });
