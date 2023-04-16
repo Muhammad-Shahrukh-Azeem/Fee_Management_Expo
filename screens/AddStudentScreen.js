@@ -1,76 +1,201 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    FlatList,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
 import { db } from '../firebase';
-import { addDoc, collection } from 'firebase/firestore';
-
-const subjectFees = {
-    maths: 100,
-    english: 80,
-    pst: 90,
-    chemistry: 100,
-    physics: 100,
-    computer: 100,
-    urdu: 80,
-    isl: 80,
-};
+import { addDoc, collection, getDocs } from 'firebase/firestore';
+import PackageCard from '../components/PackageCard';
 
 const AddStudentScreen = () => {
     const [name, setName] = useState('');
     const [selectedSubjects, setSelectedSubjects] = useState({});
-    const [totalFee, setTotalFee] = useState(0);
+    const [selectedPackage, setSelectedPackage] = useState(null);
+    const [packages, setPackages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [subjects, setSubjects] = useState([]);
+    const [totalPrice, setTotalPrice] = useState(0);
+    const [selectedPackages, setSelectedPackages] = useState([]);
+
+    const calculatePrices = () => {
+        let total = 0;
+
+        if (selectedPackage) {
+            const packageData = packages.find(pkg => pkg.id === selectedPackage);
+            if (packageData) {
+                total = packageData.amount;
+            }
+        }
+
+        const selectedSubjectCount = Object.values(selectedSubjects).filter(value => value).length;
+        total += selectedSubjectCount * 100; // Assuming each subject costs 100.
+
+        setTotalPrice(total);
+    };
+
+
 
     const navigation = useNavigation();
+    useEffect(() => {
+        fetchPackages();
+        fetchSubjects();
+    }, []);
+    useEffect(() => {
+        calculatePrices();
+    }, [selectedSubjects, selectedPackage]);
 
-    const handleSubjectSelection = (subject, value) => {
-        setSelectedSubjects((prevSelectedSubjects) => {
-            const updatedSelection = { ...prevSelectedSubjects, [subject]: value };
-            setTotalFee(Object.entries(updatedSelection).reduce((acc, [key, isSelected]) => {
-                return isSelected ? acc + subjectFees[key] : acc;
-            }, 0));
-            return updatedSelection;
-        });
-    };
 
-    const handleSubmit = async () => {
-        if (name.trim() === '') {
-            alert('Please enter the student name.');
-            return;
-        }
-
-        const selectedSubjectList = Object.entries(selectedSubjects).filter(([_, isSelected]) => isSelected).map(([subject, _]) => subject);
-
-        if (selectedSubjectList.length === 0) {
-            alert('Please select at least one subject.');
-            return;
-        }
-
+    const fetchSubjects = async () => {
         try {
-            await addDoc(collection(db, 'studentData'), {
-                name,
-                subjects: selectedSubjectList,
-                totalFee,
-                status: 'Unpaid',
-            });
-
-            alert('Student added successfully.');
-            navigation.goBack();
+            const subjectSnapshot = await getDocs(collection(db, 'courses'));
+            console.log('Subject data from Firestore:', subjectSnapshot.docs.map(doc => doc.data()));
+            const fetchedSubjects = subjectSnapshot.docs.map(doc => ({
+                name: doc.data().subjectName,
+                cost: doc.data().subjectFee // assuming the cost field is named 'subjectCost' in Firestore
+            }));
+            setSubjects(fetchedSubjects);
         } catch (error) {
-            alert('Error adding student: ' + error.message);
+            console.error('Error fetching subjects:', error);
+        }
+    };
+    
+    const handleSubmit = async () => {
+        if (!name || selectedPackages.length === 0 || Object.keys(selectedSubjects).length === 0) {
+          alert('Please fill in all fields');
+          return;
+        }
+      
+        try {
+          const totalAmount = calculateTotal();
+          const studentData = {
+            name,
+            packages: selectedPackages.map(pkgId => ({
+                packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
+            })),
+            status: 'Unpaid',
+
+            subjects: Object.keys(selectedSubjects).filter(
+              subject => selectedSubjects[subject],
+            ),
+            totalFee: totalAmount,
+          };
+      
+          await addDoc(collection(db, 'studentData'), studentData);
+          alert('Student added successfully');
+          navigation.navigate('Home', { studentData });
+        } catch (error) {
+          console.error('Error adding student:', error);
+          alert('Failed to add student');
         }
     };
 
-    const renderSubject = ({ item: subject }) => (
-        <View style={styles.subjectCheckboxContainer} key={subject}>
-            <RadioButton
-                value={selectedSubjects[subject]}
-                status={selectedSubjects[subject] ? 'checked' : 'unchecked'}
-                onPress={() => handleSubjectSelection(subject, !selectedSubjects[subject])}
+    const handlePackageSelection = (selectedPkg) => {
+        // Toggle the package selection
+        if (selectedPackages.includes(selectedPkg.id)) {
+            setSelectedPackages(selectedPackages.filter(pkgId => pkgId !== selectedPkg.id));
+        } else {
+            setSelectedPackages([...selectedPackages, selectedPkg.id]);
+        }
+    };
+
+      
+    const fetchPackages = async () => {
+        try {
+            const packageSnapshot = await getDocs(collection(db, 'packages'));
+            if (packageSnapshot && packageSnapshot.docs) {
+                const fetchedPackages = packageSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        amount: data.Amount,
+                        packageName: data.Package,
+                        subjects: data.Subjects,
+                        status: "Unpaid",
+                    };
+                });
+                setPackages(fetchedPackages);
+            } else {
+                console.error('Invalid package data received from Firestore:', packageSnapshot);
+            }
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching packages:', error);
+            setLoading(false);
+        }
+    };
+
+
+
+
+
+    const handleSubjectSelection = (subject, isSelected) => {
+        setSelectedSubjects({ ...selectedSubjects, [subject]: isSelected });
+    }
+
+    const renderSubject = ({ item }) => {
+        const subject = item.name;
+        const cost = item.cost;
+    
+        return (
+            <View style={styles.subjectCheckboxContainer} key={subject}>
+                <RadioButton
+                    value={selectedSubjects[subject]}
+                    status={selectedSubjects[subject] ? 'checked' : 'unchecked'}
+                    onPress={() => handleSubjectSelection(subject, !selectedSubjects[subject])}
+                />
+                <Text style={styles.subjectLabel}>
+                    {subject.charAt(0).toUpperCase() + subject.slice(1)} ({cost})
+                </Text>
+            </View>
+        );
+    };
+    
+    
+    const calculateTotal = () => {
+        const selectedPackageAmount = selectedPackages
+          .map((pkgId) => packages.find((pkg) => pkg.id === pkgId)?.amount || 0)
+          .reduce((total, amount) => total + amount, 0);
+      
+        const selectedSubjectCosts = Object.keys(selectedSubjects)
+          .filter((subject) => selectedSubjects[subject])
+          .map((subject) => subjects.find((s) => s.name === subject)?.cost || 0)
+          .reduce((total, cost) => total + cost, 0);
+      
+        return selectedPackageAmount + selectedSubjectCosts;
+      };
+      
+
+
+    const renderPackage = ({ item }) => (
+        <View key={item.id} style={styles.packageContainer}>
+            <PackageCard
+                packageName={item.packageName}
+                subjects={item.subjects}
+                amount={item.amount}
+                onPress={() => handlePackageSelection(item)}
             />
-            <Text style={styles.subjectLabel}>{subject.charAt(0).toUpperCase() + subject.slice(1)}</Text>
+            <RadioButton
+                value={item.id}
+                status={selectedPackages.includes(item.id) ? 'checked' : 'unchecked'}
+                onPress={() => handlePackageSelection(item)}
+            />
         </View>
     );
+    
+
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -78,18 +203,26 @@ const AddStudentScreen = () => {
             <TextInput
                 placeholder="Student Name"
                 value={name}
-                onChangeText={text => setName(text)}
+                onChangeText={(text) => setName(text)}
                 style={styles.input}
             />
             <Text style={styles.subjectsHeading}>Subjects</Text>
             <FlatList
-                data={Object.keys(subjectFees)}
+                data={subjects}
                 renderItem={renderSubject}
                 keyExtractor={(item) => item}
                 numColumns={2}
                 contentContainerStyle={styles.subjectsContainer}
             />
-            <Text style={styles.totalFee}>Total Fee: {totalFee}</Text>
+            <Text style={styles.packagesHeading}>Packages</Text>
+            <FlatList
+                data={packages}
+                renderItem={renderPackage}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.packagesContainer}
+            />
+            <Text style={styles.totalCost}>Total Cost: ${calculateTotal()}</Text>
+
             <TouchableOpacity onPress={handleSubmit} style={styles.button}>
                 <Text style={styles.buttonText}>Add Student</Text>
             </TouchableOpacity>
@@ -136,10 +269,18 @@ const styles = StyleSheet.create({
     subjectLabel: {
         marginLeft: 8,
     },
-    totalFee: {
+    packagesHeading: {
         fontWeight: 'bold',
         fontSize: 18,
+        marginBottom: 10,
+    },
+    packagesContainer: {
         marginBottom: 20,
+    },
+    packageContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
     },
     button: {
         backgroundColor: '#0782F9',
@@ -153,4 +294,18 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontSize: 16,
     },
+    packagesHeading: {
+        fontWeight: 'bold',
+        fontSize: 18,
+        marginBottom: 10,
+    },
+    packagesContainer: {
+        marginBottom: 20,
+    },
+    totalCost: {
+        fontWeight: 'bold',
+        fontSize: 18,
+        marginBottom: 20,
+    },
+
 });

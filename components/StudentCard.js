@@ -9,7 +9,6 @@ const StudentCard = ({ item }) => {
     const [paymentOption, setPaymentOption] = useState('null');
     const [customPayment, setCustomPayment] = useState('');
 
-
     const updatePayment = async () => {
         const studentRef = doc(db, 'studentData', item.id);
 
@@ -25,12 +24,12 @@ const StudentCard = ({ item }) => {
         }
     };
 
-
     return (
         <View style={[styles.studentCard, item.status === 'Paid' ? styles.paidCard : styles.unpaidCard]}>
             <Text>Name: {item.name}</Text>
-            <Text>Subject/Package: {item.subject}</Text>
-            <Text>Amount: {item.amount}</Text>
+            <Text>Courses: {item.subjects && item.subjects.join(', ')}</Text>
+            <Text>Packages: {item.packages && item.packages.map(pkg => pkg.packageName).join(', ')}</Text>
+            <Text>Amount: {item.totalFee}</Text>
             <View style={styles.paymentOptionsContainer}>
                 <View style={styles.radioButtonContainer}>
                     <RadioButton
@@ -72,6 +71,8 @@ const StudentCard = ({ item }) => {
         </View>
     );
 };
+
+
 
 const styles = StyleSheet.create({
     studentCard: {

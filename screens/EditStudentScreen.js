@@ -25,19 +25,33 @@ const EditStudentScreen = () => {
     }
   };
 
-  const handleUpdateStudent = async (id, updatedName, updatedSubject, updatedAmount) => {
-    if (updatedName.trim() === '' || updatedSubject.trim() === '' || updatedAmount.trim() === '') {
-      alert('Please fill in all the fields.');
+  const handleUpdateStudent = async (id, updatedName, updatedSubjects, updatedPackages, updatedAmount) => {
+    const fieldsToUpdate = {};
+
+    if (updatedName.trim() !== '') {
+      fieldsToUpdate.name = updatedName;
+    }
+
+    if (updatedSubjects.some(subject => subject.trim() !== '')) {
+      fieldsToUpdate.subjects = updatedSubjects;
+    }
+
+    if (updatedPackages.some(pkg => pkg.packageName.trim() !== '')) {
+      fieldsToUpdate.packages = updatedPackages;
+    }
+
+    if (updatedAmount.trim() !== '') {
+      fieldsToUpdate.totalFee = parseFloat(updatedAmount);
+    }
+
+    if (Object.keys(fieldsToUpdate).length === 0) {
+      alert('Please fill in at least one field.');
       return;
     }
 
     try {
       const studentRef = doc(db, 'studentData', id);
-      await updateDoc(studentRef, {
-        name: updatedName,
-        subject: updatedSubject,
-        amount: parseFloat(updatedAmount),
-      });
+      await updateDoc(studentRef, fieldsToUpdate);
 
       alert('Student updated successfully.');
       fetchStudentData();
@@ -61,10 +75,14 @@ const EditStudentScreen = () => {
           key={item.id}
           item={item}
           handleUpdateStudent={handleUpdateStudent}
+          totalAmount={item.totalFee}
+          subject={item.subjects ? item.subjects.join(', ') : ''}
+          package={item.packages ? item.packages.map(pkg => pkg.packageName).join(', ') : ''}
         />
       ))}
     </ScrollView>
   );
+  
 };
 
 const styles = StyleSheet.create({

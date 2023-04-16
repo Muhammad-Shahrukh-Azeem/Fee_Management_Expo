@@ -11,6 +11,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import AddCourseScreen from './screens/AddCourseScreen';
 import EditCourseScreen from './screens/EditCourseScreen';
 import EditStudentScreen from './screens/EditStudentScreen';
+import AddPackageScreen from './screens/AddPackageScreen';
+import EditPackageScreen from './screens/EditPackageScreen';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -32,6 +35,9 @@ export default function App() {
           <Stack.Screen name="AddCourse" component={AddCourseScreen} />
           <Stack.Screen name="EditCourse" component={EditCourseScreen} />
           <Stack.Screen name="EditStudent" component={EditStudentScreen} />
+          <Stack.Screen name="AddPackage" component={AddPackageScreen} />
+          <Stack.Screen name="EditPackage" component={EditPackageScreen} />
+
 
 
         </Stack.Navigator>

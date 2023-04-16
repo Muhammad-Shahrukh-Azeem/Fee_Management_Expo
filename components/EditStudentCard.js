@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const EditStudentCard = ({ item, handleUpdateStudent }) => {
-  const [updatedName, setUpdatedName] = useState(item.name);
-  const [updatedSubject, setUpdatedSubject] = useState(item.subject);
-  const [updatedAmount, setUpdatedAmount] = useState(item.amount ? item.amount.toString() : '');
+const EditStudentCard = ({ item = {}, handleUpdateStudent }) => {
+  const [updatedName, setUpdatedName] = useState(item.name || '');
+  const [updatedSubject, setUpdatedSubject] = useState((item.subjects || []).join(', '));
+  const [updatedPackages, setupdatedPackages] = useState((item.packages || []).map(pkg => pkg.packageName).join(', '));
+  const [updatedAmount, setUpdatedAmount] = useState(item.totalFee ? item.totalFee.toString() : '');
+  
 
   const handleSubmit = () => {
-    handleUpdateStudent(item.id, updatedName, updatedSubject, updatedAmount);
+    handleUpdateStudent(item.id, updatedName, updatedSubject.split(',').map(s => s.trim()), updatedPackages.split(',').map(p => ({ packageName: p.trim() })), updatedAmount);
   };
 
   return (
@@ -22,7 +24,13 @@ const EditStudentCard = ({ item, handleUpdateStudent }) => {
         style={styles.input}
         value={updatedSubject}
         onChangeText={setUpdatedSubject}
-        placeholder="Subject/Package"
+        placeholder="Subject"
+      />
+      <TextInput
+        style={styles.input}
+        value={updatedPackages}
+        onChangeText={setupdatedPackages}
+        placeholder="Package"
       />
       <TextInput
         style={styles.input}

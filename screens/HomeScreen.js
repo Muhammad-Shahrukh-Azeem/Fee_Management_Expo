@@ -18,6 +18,8 @@ const HomeScreen = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [packages, setPackages] = useState([]);
+
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'studentData'), (snapshot) => {
@@ -42,6 +44,8 @@ const HomeScreen = () => {
     }
   }, [filter, students]);
 
+  
+
   const handleSignOut = () => {
     auth
       .signOut()
@@ -56,8 +60,20 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }) => {
-    return <StudentCard item={item} />; // Use StudentCard component
+    const selectedPackage = packages.find(pkg => pkg.id === item.packageId);
+  
+    return (
+      <StudentCard
+        item={item}
+        subjects={item.subjects}
+        totalCost={item.totalCost}
+        packageName={selectedPackage?.packageName}
+        packageAmount={selectedPackage?.amount}
+      />
+    );
   };
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>

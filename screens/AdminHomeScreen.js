@@ -16,8 +16,16 @@ const AdminHomeScreen = () => {
 
   const handleEditFee = () => {
     navigation.navigate('EditCourse');
-
   };
+
+  const handleAddPackage = () => {
+    navigation.navigate('AddPackage');
+  };
+
+  const handleEditPackage = () => {
+    navigation.navigate('EditPackage');
+  };
+
 
   return (
     <View style={styles.container}>
@@ -29,6 +37,12 @@ const AdminHomeScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={handleEditStudent}>
         <Text style={styles.buttonText}>Edit Student</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleAddPackage}>
+        <Text style={styles.buttonText}>Add Package</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleEditPackage}>
+        <Text style={styles.buttonText}>Edit Package</Text>
       </TouchableOpacity>
     </View>
   );
