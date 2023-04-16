@@ -16,7 +16,12 @@ const EditPackageListScreen = () => {
     setLoading(true);
     const packageCollection = collection(db, 'packages');
     const packageSnapshot = await getDocs(packageCollection);
-    const packageData = packageSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const packageData = packageSnapshot.docs.map(doc => ({
+      id: doc.id,
+      packageName: doc.data().Package,
+      packagePrice: doc.data().Amount,
+      subjects: doc.data().Subjects,
+    }));
     setPackages(packageData);
     setLoading(false);
   };
