@@ -58,7 +58,7 @@ const PackageItem = ({ item, handleDeletePackage, refreshPackages }) => {
       ) : (
         <>
           <Text style={styles.packageName}>{item.packageName}</Text>
-          <Text style={styles.packagePrice}>{`$${item.packagePrice}`}</Text>
+          <Text style={styles.packagePrice}>{`${item.packagePrice}`}</Text>
           <Text style={styles.subjects}>{item.subjects ? item.subjects.join(', ') : ''}</Text>
         </>
       )}

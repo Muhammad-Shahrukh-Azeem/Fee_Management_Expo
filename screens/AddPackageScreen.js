@@ -1,13 +1,41 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../firebase';
+
+
 
 const AddPackageScreen = () => {
   const [packageName, setPackageName] = useState('');
   const [courses, setCourses] = useState('');
   const [totalFee, setTotalFee] = useState('');
 
-  const handleSubmit = () => {
-    // Add your logic to save the package data to Firebase here.
+  const navigation = useNavigation();
+
+
+  const handleSubmit = async () => {
+    if (!packageName || !courses || !totalFee){
+      alert('Please fill in all fields');
+      return;
+    }  
+
+    try {
+      const Package = {
+        Package: packageName,
+        Subjects: courses.split(',').map((subject) => subject.trim()),
+        Amount: totalFee,
+      };
+      
+  
+      await addDoc(collection(db, 'packages'), Package);
+      alert('Package added successfully');
+      navigation.navigate('AdminHome', { Package });
+    } catch (error) {
+      console.error('Error adding package:', error);
+      alert('Failed to add package');
+    }
+  
   };
 
   return (
