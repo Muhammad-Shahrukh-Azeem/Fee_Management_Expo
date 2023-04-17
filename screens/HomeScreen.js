@@ -179,6 +179,9 @@ const HomeScreen = () => {
         monthName: monthName,
         year: year,
         status: 'Unpaid',
+        totalFee: studentData.totalFee,
+        subjects: studentData.subjects, // Add this line
+        packages: studentData.packages, // Add this line
       });
     });
 

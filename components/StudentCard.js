@@ -22,8 +22,8 @@ const StudentCard = ({ student, feeRecord }) => {
     const [displayedTotalFee, setDisplayedTotalFee] = useState(student.totalFee);
 
     useEffect(() => {
-        setDisplayedTotalFee(student.totalFee);
-    }, [student.totalFee]);
+        setDisplayedTotalFee(feeRecord.totalFee);
+    }, [feeRecord.totalFee]);
 
     const updateFeeRecord = async (status, amount) => {
         const feeRecordRef = doc(db, 'feeRecords', feeRecord.id);
@@ -59,23 +59,23 @@ const StudentCard = ({ student, feeRecord }) => {
 
     return (
         <View style={styles.studentCard}>
-            <View style={styles.studentInfo}>
-                <View style={styles.studentInfoRow}>
-                    <Text style={styles.studentInfoTextBold}>Name:</Text>
-                    <Text style={styles.studentInfoText}>{student.name}</Text>
-                </View>
-                <View style={styles.studentInfoRow}>
-                    <Text style={styles.studentInfoTextBold}>Courses:</Text>
-                    <Text style={styles.studentInfoText}>
-                        {student.subjects && student.subjects.join(', ')}
-                    </Text>
-                </View>
-                <View style={styles.studentInfoRow}>
-                    <Text style={styles.studentInfoTextBold}>Packages:</Text>
-                    <Text style={styles.studentInfoText}>
-                        {student.packages && student.packages.map(pkg => pkg.packageName).join(', ')}
-                    </Text>
-                </View>
+        <View style={styles.studentInfo}>
+            <View style={styles.studentInfoRow}>
+                <Text style={styles.studentInfoTextBold}>Name:</Text>
+                <Text style={styles.studentInfoText}>{student.name}</Text>
+            </View>
+            <View style={styles.studentInfoRow}>
+                <Text style={styles.studentInfoTextBold}>Courses:</Text>
+                <Text style={styles.studentInfoText}>
+                    {feeRecord.subjects && feeRecord.subjects.join(', ')} {/* Change this line */}
+                </Text>
+            </View>
+            <View style={styles.studentInfoRow}>
+                <Text style={styles.studentInfoTextBold}>Packages:</Text>
+                <Text style={styles.studentInfoText}>
+                    {feeRecord.packages && feeRecord.packages.map(pkg => pkg.packageName).join(', ')} {/* Change this line */}
+                </Text>
+            </View>
                 <View style={styles.studentInfoRow}>
                     <Text style={styles.studentInfoTextBold}>Amount:</Text>
                     <Text style={styles.studentInfoText}>{displayedTotalFee}</Text>
