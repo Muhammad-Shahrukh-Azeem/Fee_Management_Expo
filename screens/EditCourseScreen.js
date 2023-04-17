@@ -3,10 +3,12 @@ import { StyleSheet, Text, FlatList, View } from 'react-native';
 import { db } from '../firebase';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import CourseItem from '../components/CourseItem';
+import { Picker } from '@react-native-picker/picker';
 
 const EditCourseScreen = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBranch, setSelectedBranch] = useState('');
 
   useEffect(() => {
     fetchCourses();
@@ -41,9 +43,21 @@ const EditCourseScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Edit Courses</Text>
+      <View style={styles.rowContainer}>
+        <Text style={styles.heading}>Edit Courses</Text>
+        <Picker
+          selectedValue={selectedBranch}
+          onValueChange={(itemValue) => setSelectedBranch(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select Branch" value="" />
+          <Picker.Item label="Johar" value="Johar" />
+          <Picker.Item label="Model" value="Model" />
+        </Picker>
+      </View>
+
       <FlatList
-        data={courses}
+        data={selectedBranch ? courses.filter(course => course.branchName === selectedBranch) : courses}
         renderItem={({ item }) => (
           <CourseItem
             item={item}
@@ -72,6 +86,21 @@ const styles = StyleSheet.create({
   },
   coursesContainer: {
     marginBottom: 20,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  picker: {
+    width: '45%',
+    borderWidth: 1,
+    borderColor: 'grey',
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    marginBottom: 15,
+    backgroundColor: 'white',
   },
 });
 

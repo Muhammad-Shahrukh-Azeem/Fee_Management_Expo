@@ -3,10 +3,12 @@ import { StyleSheet, Text, FlatList, View } from 'react-native';
 import { db } from '../firebase';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import PackageItem from '../components/PackageItem';
+import { Picker } from '@react-native-picker/picker';
 
 const EditPackageListScreen = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBranch, setSelectedBranch] = useState('');
 
   useEffect(() => {
     fetchPackages();
@@ -21,6 +23,7 @@ const EditPackageListScreen = () => {
       packageName: doc.data().Package,
       packagePrice: doc.data().Amount,
       subjects: doc.data().Subjects,
+      branchName: doc.data().Branch,
     }));
     setPackages(packageData);
     setLoading(false);
@@ -46,9 +49,21 @@ const EditPackageListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Edit Packages</Text>
+      <View style={styles.rowContainer}>
+        <Text style={styles.heading}>Edit Packages</Text>
+        <Picker
+          selectedValue={selectedBranch}
+          onValueChange={(itemValue) => setSelectedBranch(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select Branch" value="" />
+          <Picker.Item label="Johar" value="Johar" />
+          <Picker.Item label="Model" value="Model" />
+        </Picker>
+      </View>
+
       <FlatList
-        data={packages}
+        data={selectedBranch ? packages.filter(pkg => pkg.branchName === selectedBranch) : packages}
         renderItem={({ item }) => (
           <PackageItem
             item={item}
@@ -77,6 +92,21 @@ const styles = StyleSheet.create({
   },
   packagesContainer: {
     marginBottom: 20,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  picker: {
+    width: '45%',
+    borderWidth: 1,
+    borderColor: 'grey',
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    marginBottom: 15,
+    backgroundColor: 'white',
   },
 });
 

@@ -74,31 +74,31 @@ const HomeScreen = () => {
       setFilteredStudents([]);
       return;
     }
-  
+
     const filterStudents = () => {
       let filtered = students.filter((student) => {
         const studentFeeRecord = feeRecords.find((record) => record.studentId === student.id);
-  
+
         if (!studentFeeRecord) {
           return false;
         }
-  
+
         if (filter === 'All') {
           return true;
         } else {
           return studentFeeRecord.status === filter;
         }
       });
-  
+
       // Apply search filter
       filtered = searchStudents(filtered);
-  
+
       return filtered;
     };
-  
+
     setFilteredStudents(filterStudents());
   }, [filter, students, feeRecords, searchText]);
-  
+
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(
@@ -196,7 +196,8 @@ const HomeScreen = () => {
         onValueChange={(itemValue) => setSelectedMonth(itemValue)}>
         {months.map((month) => {
           const monthName = new Date(2000, month - 1).toLocaleString('default', { month: 'long' });
-          return <Picker.Item key={month} label={monthName} value={month} />;
+          const shortMonthName = monthName.slice(0, 5); // Add this line
+          return <Picker.Item key={month} label={shortMonthName} value={month} />; // Modify this line
         })}
       </Picker>
     </View>
@@ -206,9 +207,8 @@ const HomeScreen = () => {
     <View style={styles.pickerContainer}>
       <Picker
         selectedValue={selectedYear}
-        style={styles.picker}
-        onValueChange={(itemValue) => setSelectedYear(itemValue)}
-      >
+        style={styles.yearPicker} // Change this line
+        onValueChange={(itemValue) => setSelectedYear(itemValue)}>
         {years.map((year) => (
           <Picker.Item key={year} label={year.toString()} value={year} />
         ))}
@@ -216,15 +216,17 @@ const HomeScreen = () => {
     </View>
   );
 
+
+
   const handleAddStudent = () => {
     navigation.navigate('AddStudent', { selectedMonth, selectedYear });
   };
-  
+
   const renderItem = ({ item }) => {
     const feeRecord = feeRecords.find((record) => record.studentId === item.id);
     return <StudentCard student={item} feeRecord={feeRecord} />;
   };
-  
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -241,24 +243,21 @@ const HomeScreen = () => {
           <YearPicker />
         </View>
         <Text style={styles.selectedDate}>
-          {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
-            month: 'long',
-          })}{' '}
-          {selectedYear}
+
         </Text>
         <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
       </View>
       <TextInput
-  style={styles.searchInput}
-  placeholder="Search by student name"
-  value={searchText}
-  onChangeText={setSearchText}
-/>
+        style={styles.searchInput}
+        placeholder="Search by student name"
+        value={searchText}
+        onChangeText={setSearchText}
+      />
 
       <View style={styles.filterContainer}>
-        
+
         <TouchableOpacity onPress={() => setFilter('All')} style={styles.filterButton}>
           <Text style={styles.filterText}>All</Text>
         </TouchableOpacity>
@@ -357,15 +356,25 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 40,
-    width: 100,
+    width: 120,
   },
   searchInput: {
-    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginBottom: 10,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 5,
     fontSize: 16,
+    backgroundColor: '#f1f1ff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  yearPicker: {
+    height: 40,
+    width: 120,
   },
 });

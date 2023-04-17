@@ -3,6 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebase';
 import { addDoc, collection } from 'firebase/firestore';
+import { Picker } from '@react-native-picker/picker';
 
 const AddCourseScreen = () => {
     const [subjectName, setSubjectName] = useState('');
@@ -18,7 +19,7 @@ const AddCourseScreen = () => {
             alert('Please fill in all the fields.');
             return;
         }
-    
+
         try {
             await addDoc(collection(db, 'courses'), {
                 subjectName,
@@ -26,14 +27,14 @@ const AddCourseScreen = () => {
                 teacherName,
                 branchName,
             });
-    
+
             alert('Course added successfully.');
             navigation.goBack();
         } catch (error) {
             alert('Error adding course: ' + error.message);
         }
     };
-    
+
 
     return (
         <View style={styles.container}>
@@ -63,6 +64,15 @@ const AddCourseScreen = () => {
                 onChangeText={text => setBranchName(text)}
                 style={styles.input}
             />
+            <Picker
+                selectedValue={branchName}
+                onValueChange={(itemValue) => setBranchName(itemValue)}
+                style={styles.picker}
+            >
+                <Picker.Item label="Select Branch" value="" />
+                <Picker.Item label="Johar" value="Johar" />
+                <Picker.Item label="Model" value="Model" />
+            </Picker>
             <TouchableOpacity onPress={handleSubmit} style={styles.button}>
                 <Text style={styles.buttonText}>Add Course</Text>
             </TouchableOpacity>

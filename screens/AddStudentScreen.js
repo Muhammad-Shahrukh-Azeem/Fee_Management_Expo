@@ -12,6 +12,8 @@ import { RadioButton } from 'react-native-paper';
 import { db } from '../firebase';
 import { addDoc, collection, getDocs } from 'firebase/firestore';
 import PackageCard from '../components/PackageCard';
+import { Picker } from '@react-native-picker/picker';
+
 
 const AddStudentScreen = ({ route }) => {
     const [name, setName] = useState('');
@@ -22,6 +24,8 @@ const AddStudentScreen = ({ route }) => {
     const [subjects, setSubjects] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
     const [selectedPackages, setSelectedPackages] = useState([]);
+    const [branch, setBranch] = useState('');
+
 
     const { selectedMonth, selectedYear } = route.params;
 
@@ -77,6 +81,7 @@ const AddStudentScreen = ({ route }) => {
             const totalAmount = calculateTotal();
             const studentData = {
                 name,
+                branch,
                 packages: selectedPackages.map(pkgId => ({
                     packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
                 })),
@@ -85,6 +90,7 @@ const AddStudentScreen = ({ route }) => {
                 ),
                 totalFee: totalAmount,
             };
+            
 
             const newStudentRef = await addDoc(collection(db, 'studentData'), studentData);
 
@@ -218,13 +224,22 @@ const AddStudentScreen = ({ route }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.heading}>Add Student</Text>
             <TextInput
                 placeholder="Student Name"
                 value={name}
                 onChangeText={(text) => setName(text)}
                 style={styles.input}
             />
+            <Picker
+                selectedValue={branch}
+                onValueChange={(itemValue) => setBranch(itemValue)}
+                style={styles.input}
+            >
+                <Picker.Item label="Select Branch" value="" />
+                <Picker.Item label="Model" value="Model" />
+                <Picker.Item label="Johar" value="Johar" />
+            </Picker>
+
             <Text style={styles.subjectsHeading}>Subjects</Text>
             <FlatList
                 data={subjects}
