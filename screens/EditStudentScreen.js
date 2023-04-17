@@ -83,14 +83,11 @@ const EditStudentScreen = () => {
     <ScrollView contentContainerStyle={styles.container}>
       {studentData.map((item) => (
         <EditStudentCard
-          key={item.id}
-          item={item}
-          handleUpdateStudent={handleUpdateStudent}
-          handleDeleteStudent={handleDeleteStudent} // Add this line
-          totalAmount={item.totalFee}
-          subject={item.subjects ? item.subjects.join(', ') : ''}
-          package={item.packages ? item.packages.map(pkg => pkg.packageName).join(', ') : ''}
-        />
+        key={item.id}
+        item={item}
+        handleUpdateStudent={handleUpdateStudent}
+        handleDeleteStudent={handleDeleteStudent}
+      />
       ))}
     </ScrollView>
   );

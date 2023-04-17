@@ -13,7 +13,7 @@ import { db } from '../firebase';
 import { addDoc, collection, getDocs } from 'firebase/firestore';
 import PackageCard from '../components/PackageCard';
 
-const AddStudentScreen = () => {
+const AddStudentScreen = ({ route }) => {
     const [name, setName] = useState('');
     const [selectedSubjects, setSelectedSubjects] = useState({});
     const [selectedPackage, setSelectedPackage] = useState(null);
@@ -22,6 +22,9 @@ const AddStudentScreen = () => {
     const [subjects, setSubjects] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
     const [selectedPackages, setSelectedPackages] = useState([]);
+
+    const { selectedMonth, selectedYear } = route.params;
+
 
     const calculatePrices = () => {
         let total = 0;
@@ -54,7 +57,6 @@ const AddStudentScreen = () => {
     const fetchSubjects = async () => {
         try {
             const subjectSnapshot = await getDocs(collection(db, 'courses'));
-            console.log('Subject data from Firestore:', subjectSnapshot.docs.map(doc => doc.data()));
             const fetchedSubjects = subjectSnapshot.docs.map(doc => ({
                 name: doc.data().subjectName,
                 cost: doc.data().subjectFee // assuming the cost field is named 'subjectCost' in Firestore
@@ -64,35 +66,53 @@ const AddStudentScreen = () => {
             console.error('Error fetching subjects:', error);
         }
     };
-    
+
     const handleSubmit = async () => {
         if (!name) {
-          alert('Please fill in all fields');
-          return;
+            alert('Please fill in all fields');
+            return;
         }
-      
+
         try {
-          const totalAmount = calculateTotal();
-          const studentData = {
-            name,
-            packages: selectedPackages.map(pkgId => ({
-              packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
-            })),
-            subjects: Object.keys(selectedSubjects).filter(
-              subject => selectedSubjects[subject],
-            ),
-            totalFee: totalAmount,
-          };
-          
-      
-          await addDoc(collection(db, 'studentData'), studentData);
-          alert('Student added successfully');
-          navigation.navigate('Home', { studentData });
+            const totalAmount = calculateTotal();
+            const studentData = {
+                name,
+                packages: selectedPackages.map(pkgId => ({
+                    packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
+                })),
+                subjects: Object.keys(selectedSubjects).filter(
+                    subject => selectedSubjects[subject],
+                ),
+                totalFee: totalAmount,
+            };
+
+            const newStudentRef = await addDoc(collection(db, 'studentData'), studentData);
+
+            try {
+                // Add the student to feeRecords
+                const feeRecordData = {
+                    studentId: newStudentRef.id,
+                    studentName: name,
+                    month: selectedMonth,
+                    monthName: new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' }),
+                    year: selectedYear,
+                    status: 'Unpaid',
+                };
+
+                await addDoc(collection(db, 'feeRecords'), feeRecordData);
+            } catch (error) {
+                console.error('Error adding fee record:', error);
+                alert('Failed to add fee record');
+            }
+
+            alert('Student added successfully');
+            navigation.navigate('Home', { studentData });
         } catch (error) {
-          console.error('Error adding student:', error);
-          alert('Failed to add student');
+            console.error('Error adding student:', error);
+            alert('Failed to add student');
         }
     };
+
 
     const handlePackageSelection = (selectedPkg) => {
         // Toggle the package selection
@@ -103,7 +123,7 @@ const AddStudentScreen = () => {
         }
     };
 
-      
+
     const fetchPackages = async () => {
         try {
             const packageSnapshot = await getDocs(collection(db, 'packages'));
@@ -140,9 +160,9 @@ const AddStudentScreen = () => {
     const renderSubject = ({ item }) => {
         const subject = item.name;
         const cost = item.cost;
-    
+
         return (
-            <View style={styles.subjectCheckboxContainer} key={subject}>
+            <View style={styles.subjectCheckboxContainer}>
                 <RadioButton
                     value={selectedSubjects[subject]}
                     status={selectedSubjects[subject] ? 'checked' : 'unchecked'}
@@ -154,21 +174,21 @@ const AddStudentScreen = () => {
             </View>
         );
     };
-    
-    
+
+
     const calculateTotal = () => {
         const selectedPackageAmount = selectedPackages
-          .map((pkgId) => packages.find((pkg) => pkg.id === pkgId)?.amount || 0)
-          .reduce((total, amount) => total + amount, 0);
-      
+            .map((pkgId) => packages.find((pkg) => pkg.id === pkgId)?.amount || 0)
+            .reduce((total, amount) => total + amount, 0);
+
         const selectedSubjectCosts = Object.keys(selectedSubjects)
-          .filter((subject) => selectedSubjects[subject])
-          .map((subject) => subjects.find((s) => s.name === subject)?.cost || 0)
-          .reduce((total, cost) => total + cost, 0);
-      
+            .filter((subject) => selectedSubjects[subject])
+            .map((subject) => subjects.find((s) => s.name === subject)?.cost || 0)
+            .reduce((total, cost) => total + cost, 0);
+
         return selectedPackageAmount + selectedSubjectCosts;
-      };
-      
+    };
+
 
 
     const renderPackage = ({ item }) => (
@@ -186,7 +206,7 @@ const AddStudentScreen = () => {
             />
         </View>
     );
-    
+
 
     if (loading) {
         return (
@@ -209,7 +229,7 @@ const AddStudentScreen = () => {
             <FlatList
                 data={subjects}
                 renderItem={renderSubject}
-                keyExtractor={(item) => item}
+                keyExtractor={(item) => item.name}
                 numColumns={2}
                 contentContainerStyle={styles.subjectsContainer}
             />

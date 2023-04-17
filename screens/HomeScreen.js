@@ -171,9 +171,9 @@ const HomeScreen = () => {
   );
 
   const handleAddStudent = () => {
-    navigation.navigate('AddStudent');
+    navigation.navigate('AddStudent', { selectedMonth, selectedYear });
   };
-
+  
   const renderItem = ({ item }) => {
     const feeRecord = feeRecords.find((record) => record.studentId === item.id);
     return <StudentCard student={item} feeRecord={feeRecord} />;

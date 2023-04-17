@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const EditStudentCard = ({ item = {}, handleUpdateStudent }) => {
+const EditStudentCard = ({ item = {}, handleUpdateStudent, handleDeleteStudent }) => {
   const [updatedName, setUpdatedName] = useState(item.name || '');
   const [updatedSubject, setUpdatedSubject] = useState((item.subjects || []).join(', '));
   const [updatedPackages, setupdatedPackages] = useState((item.packages || []).map(pkg => pkg.packageName).join(', '));
@@ -10,6 +10,10 @@ const EditStudentCard = ({ item = {}, handleUpdateStudent }) => {
 
   const handleSubmit = () => {
     handleUpdateStudent(item.id, updatedName, updatedSubject.split(',').map(s => s.trim()), updatedPackages.split(',').map(p => ({ packageName: p.trim() })), updatedAmount);
+  };
+
+  const handleDelete = () => {
+    handleDeleteStudent(item.id);
   };
 
   return (
@@ -43,7 +47,7 @@ const EditStudentCard = ({ item = {}, handleUpdateStudent }) => {
         <TouchableOpacity style={styles.updateButton} onPress={handleSubmit}>
           <Text style={styles.updateText}>Update Student</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteStudent(item.id)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
           <Text style={styles.deleteText}>Delete Student</Text>
         </TouchableOpacity>
       </View>
