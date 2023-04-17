@@ -6,6 +6,7 @@ import {
   View,
   FlatList,
   SafeAreaView,
+  TextInput
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth, db } from '../firebase';
@@ -22,6 +23,8 @@ const HomeScreen = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [feeRecords, setFeeRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
+
 
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const years = Array.from({ length: 11 }, (_, i) => 2023 + i);
@@ -66,7 +69,36 @@ const HomeScreen = () => {
     setFilteredStudents(filterStudents());
   }, [filter, students, feeRecords]);
 
-
+  useEffect(() => {
+    if (students.length === 0 || feeRecords.length === 0) {
+      setFilteredStudents([]);
+      return;
+    }
+  
+    const filterStudents = () => {
+      let filtered = students.filter((student) => {
+        const studentFeeRecord = feeRecords.find((record) => record.studentId === student.id);
+  
+        if (!studentFeeRecord) {
+          return false;
+        }
+  
+        if (filter === 'All') {
+          return true;
+        } else {
+          return studentFeeRecord.status === filter;
+        }
+      });
+  
+      // Apply search filter
+      filtered = searchStudents(filtered);
+  
+      return filtered;
+    };
+  
+    setFilteredStudents(filterStudents());
+  }, [filter, students, feeRecords, searchText]);
+  
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(
@@ -118,6 +150,17 @@ const HomeScreen = () => {
       .catch((error) => alert(error.message));
 
   };
+
+  const searchStudents = (studentsList) => {
+    if (searchText === '') {
+      return studentsList;
+    }
+  
+    return studentsList.filter((student) =>
+      student.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+  };
+  
 
   const initializeFeeRecordsForMonth = async (month, year) => {
     const studentDocs = await getDocs(collection(db, 'studentData'));
@@ -204,8 +247,15 @@ const HomeScreen = () => {
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
       </View>
+      <TextInput
+  style={styles.searchInput}
+  placeholder="Search by student name"
+  value={searchText}
+  onChangeText={setSearchText}
+/>
 
       <View style={styles.filterContainer}>
+        
         <TouchableOpacity onPress={() => setFilter('All')} style={styles.filterButton}>
           <Text style={styles.filterText}>All</Text>
         </TouchableOpacity>
@@ -305,5 +355,14 @@ const styles = StyleSheet.create({
   picker: {
     height: 40,
     width: 100,
+  },
+  searchInput: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 10,
+    fontSize: 16,
   },
 });
