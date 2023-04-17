@@ -22,8 +22,8 @@ const StudentCard = ({ student, feeRecord }) => {
     const [displayedTotalFee, setDisplayedTotalFee] = useState(student.totalFee);
 
     useEffect(() => {
-        setDisplayedTotalFee(student.totalFee - (feeRecord.customAmount || 0));
-    }, [student.totalFee, feeRecord.customAmount]);
+        setDisplayedTotalFee(student.totalFee);
+    }, [student.totalFee]);
 
     const updateFeeRecord = async (status, amount) => {
         const feeRecordRef = doc(db, 'feeRecords', feeRecord.id);
@@ -31,22 +31,29 @@ const StudentCard = ({ student, feeRecord }) => {
         let updates = { status: status };
 
         if (amount) {
-            updates['customAmount'] = (feeRecord.customAmount || 0) + amount;
-            updates['totalFee'] = student.totalFee - updates['customAmount'];
+            updates['amountPaid'] = (feeRecord.amountPaid || 0) + amount;
+            if (updates['amountPaid'] >= student.totalFee) {
+                updates['status'] = 'Paid';
+                updates['amountPaid'] = student.totalFee;
+            }
         }
 
         await updateDoc(feeRecordRef, updates);
     };
 
     const handleCustomPayment = () => {
-        updateFeeRecord('Unpaid', parseInt(customAmount));
+        if (feeRecord.status !== 'Paid') {
+            updateFeeRecord('Unpaid', parseInt(customAmount));
+        }
     };
 
     const handleUpdatePayment = () => {
         if (paymentStatus === 'Custom Payment') {
             handleCustomPayment();
+        } else if (paymentStatus === 'Full Payment') {
+            updateFeeRecord('Paid', student.totalFee - (feeRecord.amountPaid || 0));
         } else {
-            updateFeeRecord(paymentStatus === 'Full Payment' ? 'Paid' : paymentStatus);
+            updateFeeRecord(paymentStatus);
         }
     };
 
@@ -74,11 +81,15 @@ const StudentCard = ({ student, feeRecord }) => {
                     <Text style={styles.studentInfoText}>{displayedTotalFee}</Text>
                 </View>
                 <View style={styles.studentInfoRow}>
-                    <Text style={styles.studentInfoTextBold}>Status:</Text>
-                    <Text style={feeRecord.status === 'Paid' ? styles.paidStatus : styles.unpaidStatus}>
-                        {feeRecord.status}
-                    </Text>
-                </View>
+                <Text style={styles.studentInfoTextBold}>Status:</Text>
+                <Text style={feeRecord.status === 'Paid' ? styles.paidStatus : styles.unpaidStatus}>
+                    {feeRecord.status}
+                </Text>
+            </View>
+            <View style={styles.studentInfoRow}>
+                <Text style={styles.studentInfoTextBold}>Amount Paid:</Text>
+                <Text style={styles.studentInfoText}>{feeRecord.amountPaid || 0}</Text>
+            </View>
             </View>
             <View style={styles.paymentSection}>
                 <View style={styles.radioContainer}>
