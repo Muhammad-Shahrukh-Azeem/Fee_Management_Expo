@@ -333,7 +333,7 @@ const HomeScreen = () => {
           <Text style={styles.filterText}>Unpaid</Text>
         </TouchableOpacity>
       </View>
-      <FlatList style = {styles.studentContainer}
+      <FlatList
         data={filteredStudents}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -409,10 +409,6 @@ const styles = StyleSheet.create({
   studentList: {
     paddingHorizontal: 10,
     paddingBottom: 20,
-    flex: 1,
-  },
-  studentContainer: {
-    flex: 1,
   },
   addButton: {
     alignItems: 'center',
