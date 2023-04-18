@@ -376,6 +376,7 @@ const styles = StyleSheet.create({
   studentList: {
     paddingHorizontal: 10,
     paddingBottom: 20,
+    flex: 1,
   },
   addButton: {
     alignItems: 'center',
