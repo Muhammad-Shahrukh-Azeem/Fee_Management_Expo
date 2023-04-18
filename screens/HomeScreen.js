@@ -426,10 +426,10 @@ const styles = StyleSheet.create({
     width: 120,
   },
   branchText: {
-    color: '#000',
-    fontWeight: '800',
-    fontSize: 20,
     alignContent: 'flex-start',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0782F9',
   },
   head: {
     flexDirection: 'row',
