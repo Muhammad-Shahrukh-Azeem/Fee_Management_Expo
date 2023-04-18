@@ -265,6 +265,12 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View>
+          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
+
       <View style={styles.header}>
         <View style={styles.dateFilterContainer}>
           <MonthPicker />
@@ -273,12 +279,6 @@ const HomeScreen = () => {
         </View>
       </View>
       
-      <View style={styles.branchSignOutContainer}>
-          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-            <Text style={styles.signOutText}>Sign out</Text>
-          </TouchableOpacity>
-        </View>
-
       <TextInput
         style={styles.searchInput}
         placeholder="Search by student name"
@@ -339,14 +339,13 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     backgroundColor: 'red', // Changed the background color to red
-    marginBottom: 10,
-    marginLeft: 40,
-    marginRight: 20,
     paddingVertical: 6,
     paddingHorizontal: 8,
+    margin: 6,
+    marginBottom: -7,
     borderRadius: 5,
-    alignSelf: 'center'
-  },
+    alignSelf: 'flex-end'
+    },
   signOutText: {
     color: 'white',
     alignSelf: 'center',
