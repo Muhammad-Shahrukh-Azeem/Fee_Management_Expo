@@ -363,12 +363,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 5,
+    flex: 1, // Add this line to make the filters flexible in width
+    marginHorizontal: 5,
     backgroundColor: '#0782F9',
   },
   filterText: {
     color: 'white',
     fontWeight: '700',
     fontSize: 16,
+    alignSelf: 'center'
   },
   studentList: {
     paddingHorizontal: 10,
