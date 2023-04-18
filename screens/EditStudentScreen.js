@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Modal, ActivityIndicator } from 'react-native';
 import { db } from '../firebase'; // Import db from your firebase config file
 import { updateDoc, deleteDoc, doc, getDocs, collection } from 'firebase/firestore';
 import EditStudentCard from '../components/EditStudentCard';
@@ -9,6 +9,8 @@ const EditStudentScreen = () => {
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     fetchStudentData();
@@ -29,9 +31,10 @@ const EditStudentScreen = () => {
   
   const handleDeleteStudent = async (id) => {
     try {
+      setIsLoading(true); 
       const studentRef = doc(db, 'studentData', id);
       await deleteDoc(studentRef);
-
+      setIsLoading(false); 
       alert('Student deleted successfully.');
       fetchStudentData();
     } catch (error) {
@@ -41,6 +44,7 @@ const EditStudentScreen = () => {
 
   const handleUpdateStudent = async (id, updatedName, updatedSubjects, updatedPackages, updatedAmount) => {
     const fieldsToUpdate = {};
+    setIsLoading(true); 
 
     if (updatedName.trim() !== '') {
       fieldsToUpdate.name = updatedName;
@@ -66,6 +70,7 @@ const EditStudentScreen = () => {
     try {
       const studentRef = doc(db, 'studentData', id);
       await updateDoc(studentRef, fieldsToUpdate);
+      setIsLoading(false); 
 
       alert('Student updated successfully.');
       fetchStudentData();
@@ -82,7 +87,21 @@ const EditStudentScreen = () => {
     );
   }
 
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => {}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
+
   return (
+    <>
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.rowContainer}>
         <Text style={styles.heading}>Edit Students</Text>
@@ -106,6 +125,8 @@ const EditStudentScreen = () => {
         />
       ))}
     </ScrollView>
+    {modal}
+    </>
   );
 };
 

@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  FlatList,
+  FlatList, Modal, ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
@@ -24,6 +24,8 @@ const AddStudentScreen = ({ route }) => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [selectedPackages, setSelectedPackages] = useState([]);
   const [branch, setBranch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const { selectedMonth, selectedYear } = route.params;
 
@@ -72,6 +74,7 @@ const AddStudentScreen = ({ route }) => {
       alert('Please fill in all fields');
       return;
     }
+    setIsLoading(true); 
 
     try {
       const totalAmount = calculateTotal();
@@ -115,6 +118,7 @@ const AddStudentScreen = ({ route }) => {
             (subject) => selectedSubjects[subject]
           ),
         };
+        setIsLoading(false);
 
         await addDoc(collection(db, 'feeRecords'), feeRecordData);
       } catch (error) {
@@ -140,6 +144,19 @@ const AddStudentScreen = ({ route }) => {
       setSelectedPackages([...selectedPackages, selectedPkg.id]);
     }
   };
+
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => {}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
 
   const fetchPackages = async () => {
     try {
@@ -231,6 +248,7 @@ const AddStudentScreen = ({ route }) => {
   }
 
   return (
+    <>
     <View style={styles.container}>
       <View>
       <TextInput
@@ -282,6 +300,8 @@ const AddStudentScreen = ({ route }) => {
         <Text style={styles.buttonText}>Add Student</Text>
       </TouchableOpacity>
     </View>
+    {modal}
+    </>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, FlatList, View } from 'react-native';
+import { StyleSheet, Text, FlatList, View, Modal, ActivityIndicator } from 'react-native';
 import { db } from '../firebase';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import CourseItem from '../components/CourseItem';
@@ -9,6 +9,8 @@ const EditCourseScreen = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     fetchCourses();
@@ -22,11 +24,25 @@ const EditCourseScreen = () => {
     setCourses(courseData);
     setLoading(false);
   };
-
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => {}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
   const handleDeleteCourse = async (id) => {
+
     try {
+      setIsLoading(true);
       await deleteDoc(doc(db, 'courses', id));
       setCourses(courses.filter(course => course.id !== id));
+      setIsLoading(false);
       alert('Course deleted successfully');
     } catch (error) {
       alert('Error deleting course: ' + error.message);
@@ -42,6 +58,7 @@ const EditCourseScreen = () => {
   }
 
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.rowContainer}>
         <Text style={styles.heading}>Edit Courses</Text>
@@ -69,6 +86,8 @@ const EditCourseScreen = () => {
         contentContainerStyle={styles.coursesContainer}
       />
     </View>
+    {modal}
+    </>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, FlatList, View } from 'react-native';
+import { StyleSheet, Text, FlatList, View, Modal, ActivityIndicator } from 'react-native';
 import { db } from '../firebase';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import PackageItem from '../components/PackageItem';
@@ -9,6 +9,8 @@ const EditPackageListScreen = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     fetchPackages();
@@ -31,13 +33,30 @@ const EditPackageListScreen = () => {
 
   const handleDeletePackage = async (id) => {
     try {
+      setIsLoading(true);
+
       await deleteDoc(doc(db, 'packages', id));
       setPackages(packages.filter(pkg => pkg.id !== id));
+      setIsLoading(false);
+
       alert('Package deleted successfully');
     } catch (error) {
       alert('Error deleting package: ' + error.message);
     }
   };
+
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => { }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
 
   if (loading) {
     return (

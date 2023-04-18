@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View,  Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -11,6 +11,8 @@ const AddPackageScreen = () => {
   const [courses, setCourses] = useState('');
   const [totalFee, setTotalFee] = useState('');
   const [branch, setBranch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const navigation = useNavigation();
 
@@ -19,6 +21,7 @@ const AddPackageScreen = () => {
       alert('Please fill in all fields');
       return;
     }
+    setIsLoading(true);
 
     try {
       const Package = {
@@ -29,6 +32,8 @@ const AddPackageScreen = () => {
       };
 
       await addDoc(collection(db, 'packages'), Package);
+      setIsLoading(false);
+
       alert('Package added successfully');
       navigation.navigate('AdminHome', { Package });
     } catch (error) {
@@ -37,7 +42,21 @@ const AddPackageScreen = () => {
     }
   };
 
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => {}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
+
   return (
+    <>
     <View style={styles.container}>
       <TextInput
         style={styles.input}
@@ -71,6 +90,8 @@ const AddPackageScreen = () => {
         <Text style={styles.addText}>Add Package</Text>
       </TouchableOpacity>
     </View>
+    {modal}
+    </>
   );
 };
 

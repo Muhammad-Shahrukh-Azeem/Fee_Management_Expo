@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -10,6 +10,8 @@ import UserRoleContext from '../contexts/UserRoleContext';
 const LoginScreen = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const navigation = useNavigation()
 
@@ -41,20 +43,34 @@ const LoginScreen = () => {
     return unsubscribe;
   }, []);
 
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => {}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
+
   const handleLogin = () => {
+    setIsLoading(true);
+
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
         const user = userCredentials.user;
         console.log('Logged in with:', user.email);
+        setIsLoading(false);
+
       })
       .catch((error) => alert(error.message));
   };
   
-  const handleAdminLogin = () => {
-    navigation.navigate('AdminLogin');
-  };
-
   return (
+    <>
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <Text style={styles.heading}>Expert's Management System</Text>
       <View style={styles.inputContainer}>
@@ -80,6 +96,8 @@ const LoginScreen = () => {
 
       </View>
     </KeyboardAvoidingView>
+    {modal}
+    </>
   );
   
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebase';
 import { addDoc, collection } from 'firebase/firestore';
@@ -10,11 +10,26 @@ const AddCourseScreen = () => {
     const [subjectFee, setSubjectFee] = useState('');
     const [teacherName, setTeacherName] = useState('');
     const [branchName, setBranchName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
+    const modal = (
+        <Modal
+            animationType="fade"
+            transparent
+            visible={isLoading}
+            onRequestClose={() => { }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <ActivityIndicator size="large" color="#0000ff" />
+                <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+            </View>
+        </Modal>
+    );
 
     const navigation = useNavigation();
 
     const handleSubmit = async () => {
+        setIsLoading(true);
+
         if (subjectName.trim() === '' || subjectFee.trim() === '' || teacherName.trim() === '' || branchName.trim() === '') {
             alert('Please fill in all the fields.');
             return;
@@ -27,6 +42,7 @@ const AddCourseScreen = () => {
                 teacherName,
                 branchName,
             });
+            setIsLoading(false);
 
             alert('Course added successfully.');
             navigation.goBack();
@@ -37,46 +53,49 @@ const AddCourseScreen = () => {
 
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.heading}>Add Course</Text>
-            <TextInput
-                placeholder="Subject Name"
-                value={subjectName}
-                onChangeText={text => setSubjectName(text)}
-                style={styles.input}
-            />
-            <TextInput
-                placeholder="Subject Fee"
-                value={subjectFee}
-                onChangeText={text => setSubjectFee(text)}
-                keyboardType="number-pad"
-                style={styles.input}
-            />
-            <TextInput
-                placeholder="Teacher Name"
-                value={teacherName}
-                onChangeText={text => setTeacherName(text)}
-                style={styles.input}
-            />
-            <TextInput
-                placeholder="Branch Name"
-                value={branchName}
-                onChangeText={text => setBranchName(text)}
-                style={styles.input}
-            />
-            <Picker
-                selectedValue={branchName}
-                onValueChange={(itemValue) => setBranchName(itemValue)}
-                style={styles.picker}
-            >
-                <Picker.Item label="Select Branch" value="" />
-                <Picker.Item label="Johar" value="Johar" />
-                <Picker.Item label="Model" value="Model" />
-            </Picker>
-            <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-                <Text style={styles.buttonText}>Add Course</Text>
-            </TouchableOpacity>
-        </View>
+        <>
+            <View style={styles.container}>
+                <Text style={styles.heading}>Add Course</Text>
+                <TextInput
+                    placeholder="Subject Name"
+                    value={subjectName}
+                    onChangeText={text => setSubjectName(text)}
+                    style={styles.input}
+                />
+                <TextInput
+                    placeholder="Subject Fee"
+                    value={subjectFee}
+                    onChangeText={text => setSubjectFee(text)}
+                    keyboardType="number-pad"
+                    style={styles.input}
+                />
+                <TextInput
+                    placeholder="Teacher Name"
+                    value={teacherName}
+                    onChangeText={text => setTeacherName(text)}
+                    style={styles.input}
+                />
+                <TextInput
+                    placeholder="Branch Name"
+                    value={branchName}
+                    onChangeText={text => setBranchName(text)}
+                    style={styles.input}
+                />
+                <Picker
+                    selectedValue={branchName}
+                    onValueChange={(itemValue) => setBranchName(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Select Branch" value="" />
+                    <Picker.Item label="Johar" value="Johar" />
+                    <Picker.Item label="Model" value="Model" />
+                </Picker>
+                <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+                    <Text style={styles.buttonText}>Add Course</Text>
+                </TouchableOpacity>
+            </View>
+            {modal}
+        </>
     );
 };
 
