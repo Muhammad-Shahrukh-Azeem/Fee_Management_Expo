@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { StyleSheet, Text, TouchableOpacity, View, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -9,6 +8,7 @@ const PackageItem = ({ item, handleDeletePackage, refreshPackages }) => {
   const [updatedPackageName, setUpdatedPackageName] = useState(item.packageName);
   const [updatedPackagePrice, setUpdatedPackagePrice] = useState(item.packagePrice.toString());
   const [updatedSubjects, setUpdatedSubjects] = useState(item.subjects ? item.subjects.join(', ') : '');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleUpdatePackage = async () => {
     if (updatedPackageName.trim() === '' || updatedPackagePrice.trim() === '' || updatedSubjects.trim() === '') {
@@ -16,12 +16,15 @@ const PackageItem = ({ item, handleDeletePackage, refreshPackages }) => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       await updateDoc(doc(db, 'packages', item.id), {
         Package: updatedPackageName,
         Amount: parseFloat(updatedPackagePrice),
         Subjects: updatedSubjects.split(',').map(subject => subject.trim()),
       });
+      setIsLoading(false);
 
       alert('Package updated successfully.');
       setEditing(false);
@@ -30,54 +33,68 @@ const PackageItem = ({ item, handleDeletePackage, refreshPackages }) => {
       alert('Error updating package: ' + error.message);
     }
   };
-
-  return (
-    <View style={styles.packageContainer}>
-      {editing ? (
-        <>
-          <TextInput
-            value={updatedPackageName}
-            onChangeText={text => setUpdatedPackageName(text)}
-            style={styles.input}
-            placeholder="Package Name"
-          />
-          <TextInput
-            value={updatedPackagePrice}
-            onChangeText={text => setUpdatedPackagePrice(text)}
-            keyboardType="number-pad"
-            style={styles.input}
-            placeholder="Package Price"
-          />
-          <TextInput
-            value={updatedSubjects}
-            onChangeText={text => setUpdatedSubjects(text)}
-            style={styles.input}
-            placeholder="Subjects (comma-separated)"
-          />
-        </>
-      ) : (
-        <>
-          <Text style={styles.packageName}>{item.packageName}</Text>
-          <Text style={styles.packagePrice}>{`${item.packagePrice}`}</Text>
-          <Text style={styles.subjects}>{item.subjects ? item.subjects.join(', ') : ''}</Text>
-        </>
-      )}
-
-      <View style={styles.buttonContainer}>
-        {editing ? (
-          <TouchableOpacity onPress={handleUpdatePackage} style={styles.editButton}>
-            <Text style={styles.editText}>Save</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => setEditing(true)} style={styles.editButton}>
-            <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={() => handleDeletePackage(item.id)} style={styles.deleteButton}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </TouchableOpacity>
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => { }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
       </View>
-    </View>
+    </Modal>
+  );
+  return (
+    <>
+      <View style={styles.packageContainer}>
+        {editing ? (
+          <>
+            <TextInput
+              value={updatedPackageName}
+              onChangeText={text => setUpdatedPackageName(text)}
+              style={styles.input}
+              placeholder="Package Name"
+            />
+            <TextInput
+              value={updatedPackagePrice}
+              onChangeText={text => setUpdatedPackagePrice(text)}
+              keyboardType="number-pad"
+              style={styles.input}
+              placeholder="Package Price"
+            />
+            <TextInput
+              value={updatedSubjects}
+              onChangeText={text => setUpdatedSubjects(text)}
+              style={styles.input}
+              placeholder="Subjects (comma-separated)"
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.packageName}>{item.packageName}</Text>
+            <Text style={styles.packagePrice}>{`${item.packagePrice}`}</Text>
+            <Text style={styles.subjects}>{item.subjects ? item.subjects.join(', ') : ''}</Text>
+          </>
+        )}
+
+        <View style={styles.buttonContainer}>
+          {editing ? (
+            <TouchableOpacity onPress={handleUpdatePackage} style={styles.editButton}>
+              <Text style={styles.editText}>Save</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => setEditing(true)} style={styles.editButton}>
+              <Text style={styles.editText}>Edit</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => handleDeletePackage(item.id)} style={styles.deleteButton}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      {modal}
+    </>
   );
 };
 
@@ -100,42 +117,42 @@ const styles = StyleSheet.create({
     color: '#0782F9',
   },
   subjects: {
-  fontSize: 16,
-  color: '#666',
+    fontSize: 16,
+    color: '#666',
   },
   input: {
-  marginTop: 10,
-  borderWidth: 1,
-  borderColor: 'grey',
-  borderRadius: 4,
-  paddingHorizontal: 8,
-  paddingVertical: 4,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'grey',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   buttonContainer: {
-  marginTop: 10,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   editButton: {
-  backgroundColor: '#0782F9',
-  borderRadius: 4,
-  paddingHorizontal: 16,
-  paddingVertical: 8,
+    backgroundColor: '#0782F9',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   editText: {
-  color: 'white',
-  fontWeight: 'bold',
+    color: 'white',
+    fontWeight: 'bold',
   },
   deleteButton: {
-  backgroundColor: 'red',
-  borderRadius: 4,
-  paddingHorizontal: 16,
-  paddingVertical: 8,
+    backgroundColor: 'red',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   deleteText: {
-  color: 'white',
-  fontWeight: 'bold',
+    color: 'white',
+    fontWeight: 'bold',
   },
-  });
-  
-  export default PackageItem;
+});
+
+export default PackageItem;

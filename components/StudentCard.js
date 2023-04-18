@@ -4,7 +4,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View, Modal, ActivityIndicator
 } from 'react-native';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -20,6 +20,8 @@ const StudentCard = ({ student, feeRecord }) => {
     const [paymentStatus, setPaymentStatus] = useState('Null');
     const [customAmount, setCustomAmount] = useState('');
     const [displayedTotalFee, setDisplayedTotalFee] = useState(student.totalFee);
+    const [isLoading, setIsLoading] = useState(false);
+
 
     useEffect(() => {
         setDisplayedTotalFee(feeRecord.totalFee);
@@ -46,8 +48,21 @@ const StudentCard = ({ student, feeRecord }) => {
             updateFeeRecord('Unpaid', parseInt(customAmount));
         }
     };
-
+    const modal = (
+        <Modal
+            animationType="fade"
+            transparent
+            visible={isLoading}
+            onRequestClose={() => { }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <ActivityIndicator size="large" color="#0000ff" />
+                <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+            </View>
+        </Modal>
+    );
     const handleUpdatePayment = () => {
+        setIsLoading(true);
+
         if (paymentStatus === 'Custom Payment') {
             handleCustomPayment();
         } else if (paymentStatus === 'Full Payment') {
@@ -56,90 +71,95 @@ const StudentCard = ({ student, feeRecord }) => {
             const newStatus = (feeRecord.amountPaid || 0) >= student.totalFee ? 'Paid' : 'Unpaid';
             updateFeeRecord(newStatus);
         }
+        setIsLoading(false);
+
     };
-    
+
 
     return (
-        <View style={styles.studentCard}>
-        <View style={styles.studentInfo}>
-            <View style={styles.studentInfoRow}>
-                <Text style={styles.studentInfoTextBold}>Name:</Text>
-                <Text style={styles.studentInfoText}>{student.name}</Text>
-            </View>
-            <View style={styles.studentInfoRow}>
-                <Text style={styles.studentInfoTextBold}>Courses:</Text>
-                <Text style={styles.studentInfoText}>
-                    {feeRecord.subjects && feeRecord.subjects.join(', ')} {/* Change this line */}
-                </Text>
-            </View>
-            <View style={styles.studentInfoRow}>
-                <Text style={styles.studentInfoTextBold}>Packages:</Text>
-                <Text style={styles.studentInfoText}>
-                    {feeRecord.packages && feeRecord.packages.map(pkg => pkg.packageName).join(', ')} {/* Change this line */}
-                </Text>
-            </View>
-                <View style={styles.studentInfoRow}>
-                    <Text style={styles.studentInfoTextBold}>Amount:</Text>
-                    <Text style={styles.studentInfoText}>{displayedTotalFee}</Text>
+        <>
+            <View style={styles.studentCard}>
+                <View style={styles.studentInfo}>
+                    <View style={styles.studentInfoRow}>
+                        <Text style={styles.studentInfoTextBold}>Name:</Text>
+                        <Text style={styles.studentInfoText}>{student.name}</Text>
+                    </View>
+                    <View style={styles.studentInfoRow}>
+                        <Text style={styles.studentInfoTextBold}>Courses:</Text>
+                        <Text style={styles.studentInfoText}>
+                            {feeRecord.subjects && feeRecord.subjects.join(', ')} {/* Change this line */}
+                        </Text>
+                    </View>
+                    <View style={styles.studentInfoRow}>
+                        <Text style={styles.studentInfoTextBold}>Packages:</Text>
+                        <Text style={styles.studentInfoText}>
+                            {feeRecord.packages && feeRecord.packages.map(pkg => pkg.packageName).join(', ')} {/* Change this line */}
+                        </Text>
+                    </View>
+                    <View style={styles.studentInfoRow}>
+                        <Text style={styles.studentInfoTextBold}>Amount:</Text>
+                        <Text style={styles.studentInfoText}>{displayedTotalFee}</Text>
+                    </View>
+                    <View style={styles.studentInfoRow}>
+                        <Text style={styles.studentInfoTextBold}>Status:</Text>
+                        <Text style={feeRecord.status === 'Paid' ? styles.paidStatus : styles.unpaidStatus}>
+                            {feeRecord.status}
+                        </Text>
+                    </View>
+                    <View style={styles.studentInfoRow}>
+                        <Text style={styles.studentInfoTextBold}>Amount Paid:</Text>
+                        <Text style={styles.studentInfoText}>{feeRecord.amountPaid || 0}</Text>
+                    </View>
                 </View>
-                <View style={styles.studentInfoRow}>
-                <Text style={styles.studentInfoTextBold}>Status:</Text>
-                <Text style={feeRecord.status === 'Paid' ? styles.paidStatus : styles.unpaidStatus}>
-                    {feeRecord.status}
-                </Text>
-            </View>
-            <View style={styles.studentInfoRow}>
-                <Text style={styles.studentInfoTextBold}>Amount Paid:</Text>
-                <Text style={styles.studentInfoText}>{feeRecord.amountPaid || 0}</Text>
-            </View>
-            </View>
-            <View style={styles.paymentSection}>
-                <View style={styles.radioContainer}>
+                <View style={styles.paymentSection}>
+                    <View style={styles.radioContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.radio,
+                                paymentStatus === 'Null' ? styles.radioSelected : null,
+                            ]}
+                            onPress={() => setPaymentStatus('Null')}
+                        >
+                            <Text style={styles.radioText}>Null</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.radio,
+                                paymentStatus === 'Full Payment' ? styles.radioSelected : null,
+                            ]}
+                            onPress={() => setPaymentStatus('Full Payment')}
+                        >
+                            <Text style={styles.radioText}>Full Payment</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.radio,
+                                paymentStatus === 'Custom Payment' ? styles.radioSelected : null,
+                            ]}
+                            onPress={() => setPaymentStatus('Custom Payment')}
+                        >
+                            <Text style={styles.radioText}>Custom Payment</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {paymentStatus === 'Custom Payment' && (
+                        <TextInput
+                            style={styles.customAmountInput}
+                            placeholder="Enter custom amount"
+                            value={customAmount}
+                            onChangeText={setCustomAmount}
+                            keyboardType="numeric"
+                        />
+                    )}
                     <TouchableOpacity
-                        style={[
-                            styles.radio,
-                            paymentStatus === 'Null' ? styles.radioSelected : null,
-                        ]}
-                        onPress={() => setPaymentStatus('Null')}
+                        style={styles.updatePaymentButton}
+                        onPress={handleUpdatePayment}
                     >
-                        <Text style={styles.radioText}>Null</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[
-                            styles.radio,
-                            paymentStatus === 'Full Payment' ? styles.radioSelected : null,
-                        ]}
-                        onPress={() => setPaymentStatus('Full Payment')}
-                    >
-                        <Text style={styles.radioText}>Full Payment</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[
-                            styles.radio,
-                            paymentStatus === 'Custom Payment' ? styles.radioSelected : null,
-                        ]}
-                        onPress={() => setPaymentStatus('Custom Payment')}
-                    >
-                        <Text style={styles.radioText}>Custom Payment</Text>
+                        <Text style={styles.updatePaymentText}>Update Payment</Text>
                     </TouchableOpacity>
                 </View>
-                {paymentStatus === 'Custom Payment' && (
-                    <TextInput
-                        style={styles.customAmountInput}
-                        placeholder="Enter custom amount"
-                        value={customAmount}
-                        onChangeText={setCustomAmount}
-                        keyboardType="numeric"
-                    />
-                )}
-                <TouchableOpacity
-                    style={styles.updatePaymentButton}
-                    onPress={handleUpdatePayment}
-                >
-                    <Text style={styles.updatePaymentText}>Update Payment</Text>
-                </TouchableOpacity>
             </View>
-        </View>
+            {modal}
+        </>
     );
 };
 
@@ -199,7 +219,7 @@ const styles = StyleSheet.create({
         borderColor: '#0782F9',
         backgroundColor: '#E6F1FF', // Add this line
     },
-    
+
     radioText: {
         fontSize: 14,
         fontWeight: 'bold',

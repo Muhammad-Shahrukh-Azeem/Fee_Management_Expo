@@ -6,7 +6,7 @@ import {
   View,
   FlatList,
   SafeAreaView,
-  TextInput,
+  TextInput, Modal, ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth, db } from '../firebase';
@@ -37,7 +37,7 @@ const HomeScreen = () => {
   const [branch, setBranch] = useState(
     userRole === 'Admin' ? 'Model' : userRole
   );
-
+  const [isLoading, setIsLoading] = useState(false);
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
@@ -177,6 +177,20 @@ const HomeScreen = () => {
       })
       .catch((error) => alert(error.message));
   };
+
+  const modal = (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={isLoading}
+      onRequestClose={() => {}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
+      </View>
+    </Modal>
+  );
+
   const BranchPicker = () => {
     if (userRole === 'Admin') {
       return (
@@ -206,6 +220,8 @@ const HomeScreen = () => {
   };
 
   const initializeFeeRecordsForMonth = async (month, year) => {
+    setIsLoading(true); 
+
     const studentDocs = await getDocs(collection(db, 'studentData'));
 
     const batch = writeBatch(db);
@@ -233,8 +249,10 @@ const HomeScreen = () => {
         packages: studentData.packages, // Add this line
       });
     });
+    setIsLoading(false); 
 
     await batch.commit();
+
   };
 
   const MonthPicker = () => (
@@ -290,6 +308,7 @@ const HomeScreen = () => {
   }
 
   return (
+    <>
     <SafeAreaView style={styles.container}>
       <View style={styles.head}>
         <Text style={styles.branchText}>{branch} Branch</Text>
@@ -343,6 +362,8 @@ const HomeScreen = () => {
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
     </SafeAreaView>
+   {modal}
+    </>
   );
 };
 
