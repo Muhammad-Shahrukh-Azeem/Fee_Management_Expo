@@ -6,15 +6,22 @@ import {
   View,
   FlatList,
   SafeAreaView,
-  TextInput
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { auth, db } from '../firebase';
-import { collection, onSnapshot, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+  doc,
+} from 'firebase/firestore';
 import StudentCard from '../components/StudentCard';
 import { Picker } from '@react-native-picker/picker';
 import UserRoleContext from '../contexts/UserRoleContext';
-
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -27,24 +34,26 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const { userRole } = useContext(UserRoleContext);
-  const [branch, setBranch] = useState(userRole === 'Admin' ? 'Model' : userRole);
-  
-
+  const [branch, setBranch] = useState(
+    userRole === 'Admin' ? 'Model' : userRole
+  );
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
-  
-  const months = Array.from({ length: selectedYear === currentYear ? currentMonth : 12 }, (_, i) => i + 1);
-  const years = Array.from({ length: currentYear - 2023 + 1 }, (_, i) => 2023 + i);
-  
+
+  const months = Array.from(
+    { length: selectedYear === currentYear ? currentMonth : 12 },
+    (_, i) => i + 1
+  );
+  const years = Array.from(
+    { length: currentYear - 2023 + 1 },
+    (_, i) => 2023 + i
+  );
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      query(
-        collection(db, 'studentData'),
-        where('branch', '==', branch)
-      ),
+      query(collection(db, 'studentData'), where('branch', '==', branch)),
       (snapshot) => {
         const fetchedStudents = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -53,12 +62,11 @@ const HomeScreen = () => {
         setStudents(fetchedStudents);
       }
     );
-  
+
     return () => {
       unsubscribe();
     };
   }, [branch]);
-  
 
   useEffect(() => {
     if (students.length === 0 || feeRecords.length === 0) {
@@ -68,7 +76,9 @@ const HomeScreen = () => {
 
     const filterStudents = () => {
       return students.filter((student) => {
-        const studentFeeRecord = feeRecords.find((record) => record.studentId === student.id);
+        const studentFeeRecord = feeRecords.find(
+          (record) => record.studentId === student.id
+        );
 
         if (!studentFeeRecord) {
           return false;
@@ -93,7 +103,9 @@ const HomeScreen = () => {
 
     const filterStudents = () => {
       let filtered = students.filter((student) => {
-        const studentFeeRecord = feeRecords.find((record) => record.studentId === student.id);
+        const studentFeeRecord = feeRecords.find(
+          (record) => record.studentId === student.id
+        );
 
         if (!studentFeeRecord) {
           return false;
@@ -164,7 +176,6 @@ const HomeScreen = () => {
         navigation.replace('Login');
       })
       .catch((error) => alert(error.message));
-
   };
   const BranchPicker = () => {
     if (userRole === 'Admin') {
@@ -173,7 +184,8 @@ const HomeScreen = () => {
           <Picker
             selectedValue={branch}
             style={styles.picker}
-            onValueChange={(itemValue) => setBranch(itemValue)}>
+            onValueChange={(itemValue) => setBranch(itemValue)}
+          >
             <Picker.Item label="Model" value="Model" />
             <Picker.Item label="Johar" value="Johar" />
           </Picker>
@@ -182,18 +194,16 @@ const HomeScreen = () => {
     }
     return null;
   };
-  
 
   const searchStudents = (studentsList) => {
     if (searchText === '') {
       return studentsList;
     }
-  
+
     return studentsList.filter((student) =>
       student.name.toLowerCase().includes(searchText.toLowerCase())
     );
   };
-  
 
   const initializeFeeRecordsForMonth = async (month, year) => {
     const studentDocs = await getDocs(collection(db, 'studentData'));
@@ -202,9 +212,15 @@ const HomeScreen = () => {
 
     studentDocs.forEach((studentDoc) => {
       const studentData = studentDoc.data();
-      const monthName = new Date(2000, month - 1).toLocaleString('default', { month: 'long' });
+      const monthName = new Date(2000, month - 1).toLocaleString('default', {
+        month: 'long',
+      });
 
-      const feeRecordRef = doc(db, 'feeRecords', `${studentDoc.id}_${month}_${year}`);
+      const feeRecordRef = doc(
+        db,
+        'feeRecords',
+        `${studentDoc.id}_${month}_${year}`
+      );
       batch.set(feeRecordRef, {
         studentId: studentDoc.id,
         studentName: studentData.name,
@@ -226,11 +242,17 @@ const HomeScreen = () => {
       <Picker
         selectedValue={selectedMonth}
         style={styles.picker}
-        onValueChange={(itemValue) => setSelectedMonth(itemValue)}>
+        onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+      >
         {months.map((month) => {
-          const monthName = new Date(2000, month - 1).toLocaleString('default', { month: 'long' });
+          const monthName = new Date(2000, month - 1).toLocaleString(
+            'default',
+            { month: 'long' }
+          );
           const shortMonthName = monthName.slice(0, 5); // Add this line
-          return <Picker.Item key={month} label={shortMonthName} value={month} />; // Modify this line
+          return (
+            <Picker.Item key={month} label={shortMonthName} value={month} />
+          ); // Modify this line
         })}
       </Picker>
     </View>
@@ -241,15 +263,14 @@ const HomeScreen = () => {
       <Picker
         selectedValue={selectedYear}
         style={styles.yearPicker} // Change this line
-        onValueChange={(itemValue) => setSelectedYear(itemValue)}>
+        onValueChange={(itemValue) => setSelectedYear(itemValue)}
+      >
         {years.map((year) => (
           <Picker.Item key={year} label={year.toString()} value={year} />
         ))}
       </Picker>
     </View>
   );
-
-
 
   const handleAddStudent = () => {
     navigation.navigate('AddStudent', { selectedMonth, selectedYear });
@@ -271,11 +292,11 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.head}>
-          <Text style={styles.branchText}>{branch} Branch</Text>
-          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-            <Text style={styles.signOutText}>Sign out</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.branchText}>{branch} Branch</Text>
+        <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+          <Text style={styles.signOutText}>Sign out</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.header}>
         <View style={styles.dateFilterContainer}>
@@ -284,7 +305,7 @@ const HomeScreen = () => {
           <BranchPicker />
         </View>
       </View>
-      
+
       <TextInput
         style={styles.searchInput}
         placeholder="Search by student name"
@@ -293,18 +314,26 @@ const HomeScreen = () => {
       />
 
       <View style={styles.filterContainer}>
-
-        <TouchableOpacity onPress={() => setFilter('All')} style={styles.filterButton}>
+        <TouchableOpacity
+          onPress={() => setFilter('All')}
+          style={styles.filterButton}
+        >
           <Text style={styles.filterText}>All</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilter('Paid')} style={styles.filterButton}>
+        <TouchableOpacity
+          onPress={() => setFilter('Paid')}
+          style={styles.filterButton}
+        >
           <Text style={styles.filterText}>Paid</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilter('Unpaid')} style={styles.filterButton}>
+        <TouchableOpacity
+          onPress={() => setFilter('Unpaid')}
+          style={styles.filterButton}
+        >
           <Text style={styles.filterText}>Unpaid</Text>
         </TouchableOpacity>
       </View>
-      <FlatList
+      <FlatList style = {styles.studentContainer}
         data={filteredStudents}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -318,7 +347,6 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
-
 
 const styles = StyleSheet.create({
   container: {
@@ -338,7 +366,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  
+
   selectedDate: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -349,8 +377,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     marginBottom: -7,
     borderRadius: 5,
-    alignSelf: 'flex-end'
-    },
+    alignSelf: 'flex-end',
+  },
   signOutText: {
     color: 'white',
     alignSelf: 'center',
@@ -376,11 +404,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '700',
     fontSize: 16,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   studentList: {
     paddingHorizontal: 10,
     paddingBottom: 20,
+    flex: 1,
+  },
+  studentContainer: {
     flex: 1,
   },
   addButton: {
