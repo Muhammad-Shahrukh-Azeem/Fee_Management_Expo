@@ -1,27 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
-import AdminLoginScreen from './screens/AdminLoginScreen';
 import AdminHomeScreen from './screens/AdminHomeScreen';
 import AddStudentScreen from './screens/AddStudentScreen';
-import { AuthProvider } from './contexts/AuthContext';
+import UserRoleContext from './contexts/UserRoleContext';
 import AddCourseScreen from './screens/AddCourseScreen';
 import EditCourseScreen from './screens/EditCourseScreen';
 import EditStudentScreen from './screens/EditStudentScreen';
 import AddPackageScreen from './screens/AddPackageScreen';
 import EditPackageScreen from './screens/EditPackageScreen';
 
-
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [userRole, setUserRole] = useState(null);
+
   return (
-    <AuthProvider>
-      <NavigationContainer>
+    <NavigationContainer>
+      <UserRoleContext.Provider value={{ userRole, setUserRole }}>
         <Stack.Navigator>
           <Stack.Screen
             options={{ headerShown: false }}
@@ -29,7 +28,6 @@ export default function App() {
             component={LoginScreen}
           />
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
           <Stack.Screen name="AdminHome" component={AdminHomeScreen} />
           <Stack.Screen name="AddStudent" component={AddStudentScreen} />
           <Stack.Screen name="AddCourse" component={AddCourseScreen} />
@@ -37,12 +35,9 @@ export default function App() {
           <Stack.Screen name="EditStudent" component={EditStudentScreen} />
           <Stack.Screen name="AddPackage" component={AddPackageScreen} />
           <Stack.Screen name="EditPackage" component={EditPackageScreen} />
-
-
-
         </Stack.Navigator>
-      </NavigationContainer>
-    </AuthProvider>
+      </UserRoleContext.Provider>
+    </NavigationContainer>
   );
 }
 

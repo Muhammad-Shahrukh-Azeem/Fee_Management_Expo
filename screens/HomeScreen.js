@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,6 +13,8 @@ import { auth, db } from '../firebase';
 import { collection, onSnapshot, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
 import StudentCard from '../components/StudentCard';
 import { Picker } from '@react-native-picker/picker';
+import UserRoleContext from '../contexts/UserRoleContext';
+
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -24,25 +26,34 @@ const HomeScreen = () => {
   const [feeRecords, setFeeRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
+  const { userRole } = useContext(UserRoleContext);
+  const [branch, setBranch] = useState(userRole === 'Admin' ? 'Model' : userRole);
+  
 
 
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const years = Array.from({ length: 11 }, (_, i) => 2023 + i);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'studentData'), (snapshot) => {
-      const fetchedStudents = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setStudents(fetchedStudents);
-    });
-
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, 'studentData'),
+        where('branch', '==', branch)
+      ),
+      (snapshot) => {
+        const fetchedStudents = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setStudents(fetchedStudents);
+      }
+    );
+  
     return () => {
       unsubscribe();
     };
-  }, []);
-
+  }, [branch]);
+  
 
   useEffect(() => {
     if (students.length === 0 || feeRecords.length === 0) {
@@ -150,6 +161,23 @@ const HomeScreen = () => {
       .catch((error) => alert(error.message));
 
   };
+  const BranchPicker = () => {
+    if (userRole === 'Admin') {
+      return (
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={branch}
+            style={styles.picker}
+            onValueChange={(itemValue) => setBranch(itemValue)}>
+            <Picker.Item label="Model" value="Model" />
+            <Picker.Item label="Johar" value="Johar" />
+          </Picker>
+        </View>
+      );
+    }
+    return null;
+  };
+  
 
   const searchStudents = (studentsList) => {
     if (searchText === '') {
@@ -238,16 +266,16 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.filterContainer}>
+        <View style={styles.dateFilterContainer}>
           <MonthPicker />
           <YearPicker />
         </View>
-        <Text style={styles.selectedDate}>
-
-        </Text>
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </TouchableOpacity>
+        <View style={styles.branchSignOutContainer}>
+          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </TouchableOpacity>
+          <BranchPicker />
+        </View>
       </View>
       <TextInput
         style={styles.searchInput}
@@ -297,20 +325,28 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
+  dateFilterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  
   selectedDate: {
     fontSize: 16,
     fontWeight: 'bold',
   },
   signOutButton: {
-    backgroundColor: '#0782F9',
+    backgroundColor: 'red', // Changed the background color to red
     paddingVertical: 6,
     paddingHorizontal: 8,
     borderRadius: 5,
+    marginRight: 10, // Add spacing between sign-out button and branch picker
   },
   signOutText: {
     color: 'white',
     fontWeight: '700',
     fontSize: 14,
+    padding: 2,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -353,10 +389,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#0782F9',
     borderRadius: 5,
+    height: 35,
+    justifyContent: 'center', // Add this line to center the content vertically
   },
   picker: {
-    height: 40,
+    height: 35,
     width: 120,
+    alignSelf: 'center', // Add this line to center the picker horizontally
   },
   searchInput: {
     borderWidth: 1,

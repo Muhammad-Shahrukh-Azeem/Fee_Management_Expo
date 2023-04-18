@@ -1,8 +1,10 @@
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { useNavigation } from '@react-navigation/core'
-import React, { useEffect, useState } from 'react'
-import { auth } from '../firebase'
+import React, { useEffect, useState, useContext } from 'react';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/core';
+import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import UserRoleContext from '../contexts/UserRoleContext';
 
 
 const LoginScreen = () => {
@@ -11,14 +13,33 @@ const LoginScreen = () => {
 
   const navigation = useNavigation()
 
+  const { setUserRole } = useContext(UserRoleContext);
+
+
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        navigation.replace('Home');
+        // Get the user's role from the 'userRoles' collection in Firestore
+        const docRef = doc(db, 'userRoles', user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const userRole = docSnap.data().Role;
+          setUserRole(userRole); 
+          // Navigate to appropriate screen based on userRole
+          if (userRole === 'Admin') {
+            navigation.replace('AdminHome');
+          } else {
+            navigation.replace('Home');
+          }
+        } else {
+          console.log("userRoles doc not found for user: ", user); // Debug statement
+          // Handle the case when no user role is found, e.g., show an error message or log out the user
+        }
       }
     });
-    return unsubscribe
-  }, [])
+    return unsubscribe;
+  }, []);
 
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
@@ -56,12 +77,7 @@ const LoginScreen = () => {
         <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleAdminLogin}
-          style={[styles.button, styles.adminButton]}
-        >
-          <Text style={styles.adminButtonText}>Admin Login</Text>
-        </TouchableOpacity>
+
       </View>
     </KeyboardAvoidingView>
   );
@@ -120,16 +136,5 @@ const styles = StyleSheet.create({
     color: '#0782F9',
     fontWeight: '700',
     fontSize: 16,
-  },
-  adminButton: {
-    backgroundColor: 'white',
-    borderColor: '#0782F9',
-    borderWidth: 2,
-    marginTop: 10,
-  },
-  adminButtonText: {
-    color: '#0782F9',
-    fontWeight: '700',
-    fontSize: 16,
-  },
+  }
 })
