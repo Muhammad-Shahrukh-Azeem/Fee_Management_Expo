@@ -21,6 +21,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#f8f8f8',
     borderRadius: 10,
+    flex: 1, // Add this line to make the filters flexible in width
     paddingHorizontal: 20,
     paddingVertical: 15,
     marginBottom: 10,
