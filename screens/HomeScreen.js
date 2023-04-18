@@ -342,7 +342,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'red', // Changed the background color to red
     paddingVertical: 6,
     paddingHorizontal: 8,
-    margin: 6,
     marginBottom: -7,
     borderRadius: 5,
     alignSelf: 'flex-end'
@@ -425,9 +424,9 @@ const styles = StyleSheet.create({
   },
   branchText: {
     color: '#000',
-    fontWeight: '700',
-    fontSize: 24,
-    alignContent: 'flex-start'
+    fontWeight: '800',
+    fontSize: 20,
+    alignContent: 'flex-start',
   },
   head: {
     flexDirection: 'row',
