@@ -269,14 +269,16 @@ const HomeScreen = () => {
         <View style={styles.dateFilterContainer}>
           <MonthPicker />
           <YearPicker />
-        </View>
-        <View style={styles.branchSignOutContainer}>
-          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-            <Text style={styles.signOutText}>Sign out</Text>
-          </TouchableOpacity>
           <BranchPicker />
         </View>
       </View>
+      
+      <View style={styles.branchSignOutContainer}>
+          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
+
       <TextInput
         style={styles.searchInput}
         placeholder="Search by student name"
@@ -337,13 +339,17 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     backgroundColor: 'red', // Changed the background color to red
+    marginBottom: 10,
+    marginLeft: 40,
+    marginRight: 20,
     paddingVertical: 6,
     paddingHorizontal: 8,
     borderRadius: 5,
-    marginRight: 10, // Add spacing between sign-out button and branch picker
+    alignSelf: 'center'
   },
   signOutText: {
     color: 'white',
+    alignSelf: 'center',
     fontWeight: '700',
     fontSize: 14,
     padding: 2,
@@ -389,6 +395,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#0782F9',
     borderRadius: 5,
+    marginLeft: 5,
     height: 35,
     justifyContent: 'center', // Add this line to center the content vertically
   },
