@@ -31,8 +31,13 @@ const HomeScreen = () => {
   
 
 
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const years = Array.from({ length: 11 }, (_, i) => 2023 + i);
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
+  
+  const months = Array.from({ length: selectedYear === currentYear ? currentMonth : 12 }, (_, i) => i + 1);
+  const years = Array.from({ length: currentYear - 2023 + 1 }, (_, i) => 2023 + i);
+  
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -130,7 +135,7 @@ const HomeScreen = () => {
     return () => {
       unsubscribe();
     };
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, currentMonth, currentYear]);
 
   useEffect(() => {
     const checkAndInitializeFeeRecords = async () => {
