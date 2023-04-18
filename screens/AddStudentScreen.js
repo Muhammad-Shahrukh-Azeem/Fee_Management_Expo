@@ -5,7 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  FlatList, Modal, ActivityIndicator
+  FlatList,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
@@ -25,7 +27,8 @@ const AddStudentScreen = ({ route }) => {
   const [selectedPackages, setSelectedPackages] = useState([]);
   const [branch, setBranch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const [subjectsVisible, setSubjectsVisible] = useState(true);
+  const [packagesVisible, setPackagesVisible] = useState(true);
 
   const { selectedMonth, selectedYear } = route.params;
 
@@ -74,7 +77,7 @@ const AddStudentScreen = ({ route }) => {
       alert('Please fill in all fields');
       return;
     }
-    setIsLoading(true); 
+    setIsLoading(true);
 
     try {
       const totalAmount = calculateTotal();
@@ -150,8 +153,16 @@ const AddStudentScreen = ({ route }) => {
       animationType="fade"
       transparent
       visible={isLoading}
-      onRequestClose={() => {}}>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      onRequestClose={() => {}}
+    >
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+        }}
+      >
         <ActivityIndicator size="large" color="#0000ff" />
         <Text style={{ marginTop: 10, color: 'white' }}>Loading...</Text>
       </View>
@@ -239,6 +250,14 @@ const AddStudentScreen = ({ route }) => {
     </View>
   );
 
+  const toggleVisibility = (heading) => {
+    if (heading === 'subjects') {
+      setSubjectsVisible(!subjectsVisible);
+    } else if (heading === 'packages') {
+      setPackagesVisible(!packagesVisible);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -249,58 +268,66 @@ const AddStudentScreen = ({ route }) => {
 
   return (
     <>
-    <View style={styles.container}>
-      <View>
-      <TextInput
-        placeholder="Student Name"
-        value={name}
-        onChangeText={(text) => setName(text)}
-        style={styles.input}
-      />
-      </View>
-      
-      <View>
-      <Picker
-        selectedValue={branch}
-        onValueChange={(itemValue) => setBranch(itemValue)}
-        style={styles.input}
-      >
-        <Picker.Item label="Select Branch" value="" />
-        <Picker.Item label="Model" value="Model" />
-        <Picker.Item label="Johar" value="Johar" />
-      </Picker>
-      </View>
+      <View style={styles.container}>
+        <View>
+          <Text style={styles.packagesHeading}>Student Name *</Text>
+          <TextInput
+            placeholder="Student Name"
+            value={name}
+            onChangeText={(text) => setName(text)}
+            style={styles.input}
+          />
+        </View>
 
-      <View>
-        <Text style={styles.subjectsHeading}>Subjects</Text>
-        <FlatList
-          data={subjects}
-          renderItem={renderSubject}
-          keyExtractor={(item) => item.name}
-          numColumns={2}
-          contentContainerStyle={styles.subjectsContainer}
-        />
+        <View>
+          <Text style={styles.packagesHeading}>Branch *</Text>
+          <Picker
+            selectedValue={branch}
+            onValueChange={(itemValue) => setBranch(itemValue)}
+            style={styles.input}
+          >
+            <Picker.Item label="Select Branch" value="" />
+            <Picker.Item label="Model" value="Model" />
+            <Picker.Item label="Johar" value="Johar" />
+          </Picker>
+        </View>
+
+        <View>
+          <TouchableOpacity onPress={() => toggleVisibility('subjects')}>
+            <Text style={styles.subjectsHeading}>Subjects</Text>
+          </TouchableOpacity>
+          {subjectsVisible ? (
+            <FlatList
+              data={subjects}
+              renderItem={renderSubject}
+              keyExtractor={(item) => item.name}
+              numColumns={2}
+              contentContainerStyle={styles.subjectsContainer}
+            />
+          ) : null}
+        </View>
+
+        <TouchableOpacity onPress={() => toggleVisibility('packages')}>
+          <Text style={styles.packagesHeading}>Packages</Text>
+        </TouchableOpacity>
+        {packagesVisible ? (
+          <FlatList
+            data={packages}
+            renderItem={renderPackage}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.packagesContainer}
+          />
+        ) : null}
+
+        <View>
+          <Text style={styles.totalCost}>Total Cost: ${calculateTotal()}</Text>
+        </View>
+
+        <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+          <Text style={styles.buttonText}>Add Student</Text>
+        </TouchableOpacity>
       </View>
-
-
-      <Text style={styles.packagesHeading}>Packages</Text>
-      <FlatList
-        data={packages}
-        renderItem={renderPackage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.packagesContainer}
-      />
-      
-      <View>
-      <Text style={styles.totalCost}>Total Cost: ${calculateTotal()}</Text>
-      </View>
-     
-
-      <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-        <Text style={styles.buttonText}>Add Student</Text>
-      </TouchableOpacity>
-    </View>
-    {modal}
+      {modal}
     </>
   );
 };
