@@ -103,6 +103,15 @@ const AddStudentScreen = ({ route }) => {
                     monthName: new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' }),
                     year: selectedYear,
                     status: 'Unpaid',
+                    totalFee: totalAmount,
+                    branch,
+                    packages: selectedPackages.map(pkgId => ({
+                        packageName: packages.find(pkg => pkg.id === pkgId)?.packageName || '',
+                    })),
+                    subjects: Object.keys(selectedSubjects).filter(
+                        subject => selectedSubjects[subject],
+                    ),
+
                 };
 
                 await addDoc(collection(db, 'feeRecords'), feeRecordData);
