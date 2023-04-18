@@ -265,7 +265,8 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View>
+      <View style={styles.head}>
+          <Text style={styles.branchText}>{branch} Branch</Text>
           <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
             <Text style={styles.signOutText}>Sign out</Text>
           </TouchableOpacity>
@@ -421,5 +422,19 @@ const styles = StyleSheet.create({
   yearPicker: {
     height: 40,
     width: 120,
+  },
+  branchText: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 24,
+    alignContent: 'flex-start'
+  },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
 });
