@@ -52,10 +52,12 @@ const StudentCard = ({ student, feeRecord }) => {
             handleCustomPayment();
         } else if (paymentStatus === 'Full Payment') {
             updateFeeRecord('Paid', student.totalFee - (feeRecord.amountPaid || 0));
-        } else {
-            updateFeeRecord(paymentStatus);
+        } else if (paymentStatus === 'Null') {
+            const newStatus = (feeRecord.amountPaid || 0) >= student.totalFee ? 'Paid' : 'Unpaid';
+            updateFeeRecord(newStatus);
         }
     };
+    
 
     return (
         <View style={styles.studentCard}>
