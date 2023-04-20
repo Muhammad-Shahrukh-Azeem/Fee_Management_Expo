@@ -71,7 +71,7 @@ const LoginScreen = () => {
   
   return (
     <>
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView style={styles.container} behavior="center">
       <Text style={styles.heading}>Expert's Management System</Text>
       <View style={styles.inputContainer}>
         <TextInput

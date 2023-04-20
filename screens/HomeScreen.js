@@ -23,6 +23,7 @@ import StudentCard from '../components/StudentCard';
 import { Picker } from '@react-native-picker/picker';
 import UserRoleContext from '../contexts/UserRoleContext';
 
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [students, setStudents] = useState([]);
