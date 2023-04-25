@@ -3,14 +3,14 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const PackageCard = ({ packageName, subjects, amount, onPress }) => {
   return (
-<View style={styles.container}>
-  <Text style={styles.packageName}>{packageName}</Text>
-  <Text style={styles.subjects}>{subjects.join(', ')}</Text>
-  <Text style={styles.amount}>Amount: {amount}</Text>
-  <TouchableOpacity style={styles.button} onPress={onPress}>
-    <Text style={styles.buttonText}>Select</Text>
-  </TouchableOpacity>
-</View>
+    <View style={styles.container}>
+      <Text style={styles.packageName}>{packageName}</Text>
+      <Text style={styles.subjects}>{subjects ? subjects.join(', ') : ''}</Text>
+      <Text style={styles.amount}>Amount: {amount}</Text>
+      <TouchableOpacity style={styles.button} onPress={onPress}>
+        <Text style={styles.buttonText}>Select</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 

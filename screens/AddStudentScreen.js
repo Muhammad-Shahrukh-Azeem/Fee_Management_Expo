@@ -32,23 +32,23 @@ const AddStudentScreen = ({ route }) => {
 
   const { selectedMonth, selectedYear } = route.params;
 
-  const calculatePrices = () => {
-    let total = 0;
+  // const calculatePrices = () => {
+  //   let total = 0;
 
-    if (selectedPackage) {
-      const packageData = packages.find((pkg) => pkg.id === selectedPackage);
-      if (packageData) {
-        total = packageData.amount;
-      }
-    }
+  //   if (selectedPackage) {
+  //     const packageData = packages.find((pkg) => pkg.id === selectedPackage);
+  //     if (packageData) {
+  //       total = packageData.amount;
+  //     }
+  //   }
 
-    const selectedSubjectCount = Object.values(selectedSubjects).filter(
-      (value) => value
-    ).length;
-    total += selectedSubjectCount * 100; // Assuming each subject costs 100.
+  //   const selectedSubjectCount = Object.values(selectedSubjects).filter(
+  //     (value) => value
+  //   ).length;
+  //   total += selectedSubjectCount * 100; // Assuming each subject costs 100.
 
-    setTotalPrice(total);
-  };
+  //   setTotalPrice(total);
+  // };
 
   const navigation = useNavigation();
   useEffect(() => {
@@ -56,7 +56,7 @@ const AddStudentScreen = ({ route }) => {
     fetchSubjects();
   }, []);
   useEffect(() => {
-    calculatePrices();
+    // calculatePrices();
   }, [selectedSubjects, selectedPackage]);
 
   const fetchSubjects = async () => {
@@ -204,7 +204,12 @@ const AddStudentScreen = ({ route }) => {
   const renderSubject = ({ item }) => {
     const subject = item.name;
     const cost = item.cost;
-
+  
+    if (!subject) {
+      // console.warn('Subject name is not defined:', item);
+      return null;
+    }
+  
     return (
       <View style={styles.subjectCheckboxContainer}>
         <RadioButton
@@ -220,11 +225,12 @@ const AddStudentScreen = ({ route }) => {
       </View>
     );
   };
+  
 
   const calculateTotal = () => {
     const selectedPackageAmount = selectedPackages
       .map((pkgId) => packages.find((pkg) => pkg.id === pkgId)?.amount || 0)
-      .reduce((total, amount) => total + amount, 0);
+      .reduce((total, amount) => Number(total) + Number(amount), 0);
 
     const selectedSubjectCosts = Object.keys(selectedSubjects)
       .filter((subject) => selectedSubjects[subject])
